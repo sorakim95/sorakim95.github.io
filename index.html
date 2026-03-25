@@ -3,466 +3,569 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Sora Kim</title>
-<script>
-if (/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) || window.innerWidth < 768) {
-  location.replace('mobile.html');
+<title>sora@seoul:~</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐧</text></svg>"/>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap');
+:root{
+  --bg:#f5f0e8;--bg2:#ede8dc;--bg3:#e0d9cc;
+  --line:rgba(26,20,40,.10);--text:#1a1428;
+  --muted:#7a6e7e;--dim:#b0a8b8;
+  --terra:#c4593a;--pink:#b8608a;--mint:#4a9e7e;
+  --yellow:#c89a2a;--blue:#4a7ab8;
+  --mono:'Space Mono',monospace;--pixel:'Press Start 2P',monospace;
 }
-</script>
-<link rel="stylesheet" href="style.css"/>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg2)}
+body{
+  font-family:var(--mono);color:var(--text);
+  background-image:radial-gradient(circle,rgba(26,20,40,.07) 1px,transparent 1px);
+  background-size:22px 22px;
+  display:flex;align-items:center;justify-content:center;
+  min-height:100vh;padding:20px;
+}
+
+.window{
+  width:100%;max-width:860px;
+  border:2px solid var(--text);
+  border-radius:8px;overflow:hidden;
+  box-shadow:6px 6px 0 var(--text);
+  display:flex;flex-direction:column;
+  max-height:90vh;
+}
+.win-bar{
+  background:var(--text);padding:10px 16px;
+  display:flex;align-items:center;gap:10px;flex-shrink:0;
+}
+.dots{display:flex;gap:6px}
+.dot{width:11px;height:11px;border-radius:50%;cursor:pointer}
+.dot.r{background:#ff5f57}.dot.y{background:#febc2e}.dot.g{background:#28c840}
+.win-title{flex:1;text-align:center;font-family:var(--pixel);font-size:7px;color:rgba(245,240,232,.5);letter-spacing:.05em}
+
+.term{
+  flex:1;overflow-y:auto;padding:22px 26px;
+  background:var(--bg);cursor:text;
+  min-height:0;
+}
+.term::-webkit-scrollbar{width:5px}
+.term::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:3px}
+
+.line{margin-bottom:2px;line-height:1.75;font-size:13px;white-space:pre-wrap;word-break:break-word}
+.line.prompt-line{display:flex;align-items:flex-start;gap:8px}
+.ps1{color:var(--terra);font-family:var(--pixel);font-size:7px;white-space:nowrap;padding-top:3px}
+.ps1 .sym{color:var(--mint)}
+.line.out{color:var(--muted);padding-left:2px}
+.line.err{color:var(--terra)}
+.line.head{color:var(--text);font-family:var(--pixel);font-size:7px;letter-spacing:.06em;margin:10px 0 5px;border-bottom:1px solid var(--line);padding-bottom:5px}
+.line.blank{min-height:10px}
+.line b{color:var(--text);font-weight:700}
+.te{color:var(--terra)}.mi{color:var(--mint)}.pi{color:var(--pink)}.bl{color:var(--blue)}.ye{color:var(--yellow)}.dm{color:var(--dim)}
+
+/* typing animation */
+@keyframes fadeIn{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:none}}
+.line.typed{animation:fadeIn .12s ease forwards}
+
+/* progress bar */
+.prog-wrap{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted)}
+.prog-bar{flex:1;height:8px;background:var(--bg3);border:1px solid var(--line);border-radius:2px;overflow:hidden}
+.prog-fill{height:100%;background:var(--terra);border-radius:2px;transition:width .05s}
+
+/* input */
+.input-row{
+  display:flex;align-items:center;gap:8px;
+  padding:12px 26px;border-top:1px solid var(--line);
+  background:var(--bg2);flex-shrink:0;
+}
+.input-ps1{color:var(--terra);font-family:var(--pixel);font-size:7px;white-space:nowrap}
+.input-ps1 .sym{color:var(--mint)}
+#cmd{
+  flex:1;background:transparent;border:none;outline:none;
+  font-family:var(--mono);font-size:13px;color:var(--text);
+  caret-color:var(--terra);
+}
+#cmd::placeholder{color:var(--dim);font-size:12px}
+
+/* tab hints */
+.hint-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
+.hint{font-family:var(--pixel);font-size:6px;padding:3px 7px;border:1px solid var(--line);border-radius:2px;color:var(--dim);cursor:pointer;transition:all .1s}
+.hint:hover{background:var(--terra);color:#fff;border-color:var(--terra)}
+
+/* scan line overlay */
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:999;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(26,20,40,.015) 2px,rgba(26,20,40,.015) 4px);
+}
+
+.blink{animation:blink 1s step-end infinite;color:var(--terra)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+@media(max-width:600px){
+  body{padding:0;align-items:flex-start}
+  .window{max-height:100vh;border-radius:0;border:none;box-shadow:none}
+  .term{padding:14px 14px}
+  .input-row{padding:10px 14px}
+  .line{font-size:12px}
+  #cmd{font-size:12px}
+}
+</style>
 </head>
 <body>
-<div id="desktop">
-  <canvas id="waves"></canvas>
-
-  <!-- MENU BAR -->
-  <div id="menubar">
-    <span class="mb-apple">🍎</span>
-    <span class="mb-item">Sora</span>
-    <span class="mb-item">File</span>
-    <span class="mb-item">Edit</span>
-    <span class="mb-item">View</span>
-    <span class="mb-item">Window</span>
-    <span class="mb-item">Help</span>
-    <div class="mb-right">
-      <span class="mb-icon">📶</span>
-      <span class="mb-icon">🔋</span>
-      <span class="mb-time" id="clock">9:41 AM</span>
+<div class="window">
+  <div class="win-bar">
+    <div class="dots">
+      <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
     </div>
+    <div class="win-title">🐧 sora@seoul: ~/home</div>
   </div>
-
-  <!-- HOME WINDOW -->
-  <div class="win open focused" id="win-home" style="top:40px;left:60px">
-    <div class="win-bar" data-win="win-home">
-      <div class="wc cl" data-action="close" data-win="win-home"></div>
-      <div class="wc mn" data-action="min" data-win="win-home"></div>
-      <div class="wc mx" data-action="max" data-win="win-home"></div>
-      <div class="win-title">🏠 Sora Kim — Home</div>
-    </div>
-    <div class="win-toolbar">
-      <div class="tb-btn">‹</div><div class="tb-btn">›</div>
-      <div class="tb-spacer"></div>
-      <input class="tb-search" placeholder="🔍 Search" readonly/>
-    </div>
-    <div class="win-body">
-      <div class="win-sidebar">
-        <div class="sb-head">Places</div>
-        <div class="sb-row on"><span class="sb-ico">🏠</span>Home</div>
-        <div class="sb-row" ondblclick="openWin('win-writing')"><span class="sb-ico">✍️</span>Writing</div>
-        <div class="sb-row" ondblclick="openWin('win-projects')"><span class="sb-ico">🗂</span>Projects</div>
-        <div class="sb-row" ondblclick="openWin('win-papers')"><span class="sb-ico">📄</span>Papers</div>
-        <div class="sb-row" ondblclick="openWin('win-diary')"><span class="sb-ico">📔</span>Diary</div>
-        <div class="sb-row" ondblclick="openWin('win-about')"><span class="sb-ico">👤</span>About</div>
-        <div class="sb-head" style="margin-top:8px">Links</div>
-        <div class="sb-row" onclick="window.open('https://github.com/sorakim-lab','_blank')"><span class="sb-ico">💻</span>GitHub</div>
-        <div class="sb-row" onclick="window.open('https://instagram.com/sora.rchive_','_blank')"><span class="sb-ico">📷</span>Instagram</div>
-      </div>
-      <div class="win-content">
-        <div class="c-hero">
-          <div class="c-avatar"><img src="assets/kimsorakim.jpg" alt="Sora"/></div>
-          <div>
-            <div class="c-name">Sora Kim</div>
-            <div class="c-sub">writer · researcher · seoul 🌱<br>I notice what feels off.</div>
-            <div class="c-chips">
-              <span class="chip">researcher</span>
-              <span class="chip gr">writer</span>
-              <span class="chip pu">always noticing</span>
-            </div>
-          </div>
-        </div>
-        <div class="c-section-title">📡 updates</div>
-        <div class="c-row upd-row">
-          <div class="upd-dot pk"></div>
-          <div class="c-body"><div class="c-title">redesigned the home page <span class="px px-badge">NEW</span></div><div class="c-meta">more blur, better motion, less template energy</div></div>
-        </div>
-        <div class="c-row upd-row">
-          <div class="upd-dot bl"></div>
-          <div class="c-body"><div class="c-title">4S Toronto 2026 abstract submitted</div><div class="c-meta">PAC paper · TechnoPower panel · 1순위</div></div>
-        </div>
-        <div class="c-row upd-row">
-          <div class="upd-dot gn"></div>
-          <div class="c-body"><div class="c-title">FDA Warning Letters dataset complete</div><div class="c-meta">N=50 cases · N=160 violations · 2016–2025</div></div>
-        </div>
-        <div class="c-divider"></div>
-        <div class="c-section-title">recent writing</div>
-        <div class="c-row" ondblclick="openWin('win-writing')">
-          <div class="c-ico" style="background:linear-gradient(145deg,#2244aa,#113388)">🌀</div>
-          <div class="c-body"><div class="c-title">Things I can't unnotice <span class="px px-badge">NEW</span></div><div class="c-meta">essay · small tensions, social weirdness</div></div>
-          <span class="c-chev">›</span>
-        </div>
-        <div class="c-row" ondblclick="openWin('win-writing')">
-          <div class="c-ico" style="background:linear-gradient(145deg,#224433,#113322)">☁️</div>
-          <div class="c-body"><div class="c-title">Notes I wrote instead of sleeping</div><div class="c-meta">journal · fragments, half-finished thoughts</div></div>
-          <span class="c-chev">›</span>
-        </div>
-      </div>
-    </div>
-    <div class="status-bar-win">
-      <span>3 updates</span>
-      <span class="status-px" id="home-clock">online · seoul</span>
-      <span>sorakim95.github.io</span>
-    </div>
+  <div class="term" id="term">
+    <div id="output"></div>
   </div>
-
-  <!-- WRITING WINDOW -->
-  <div class="win" id="win-writing" style="top:60px;left:200px">
-    <div class="win-bar" data-win="win-writing">
-      <div class="wc cl" data-action="close" data-win="win-writing"></div>
-      <div class="wc mn" data-action="min" data-win="win-writing"></div>
-      <div class="wc mx" data-action="max" data-win="win-writing"></div>
-      <div class="win-title">✍️ Writing</div>
-    </div>
-    <div class="win-toolbar">
-      <div class="tb-btn">‹</div><div class="tb-btn">›</div>
-      <div class="tb-spacer"></div>
-      <input class="tb-search" placeholder="🔍 Search writing" readonly/>
-    </div>
-    <div class="win-body">
-      <div class="win-sidebar">
-        <div class="sb-head">Filter</div>
-        <div class="sb-row on"><span class="sb-ico">📝</span>All</div>
-        <div class="sb-row"><span class="sb-ico">📖</span>Essays</div>
-        <div class="sb-row"><span class="sb-ico">🗒</span>Journal</div>
-      </div>
-      <div class="win-content">
-        <div class="c-section-title">essays</div>
-        <div class="c-row"><div class="c-ico" style="background:linear-gradient(145deg,#2244aa,#113388)">🌀</div><div class="c-body"><div class="c-title">Things I can't unnotice <span class="px px-badge">NEW</span></div><div class="c-meta">small tensions · social weirdness</div></div><span class="c-chev">›</span></div>
-        <div class="c-row"><div class="c-ico" style="background:linear-gradient(145deg,#443355,#332244)">🍵</div><div class="c-body"><div class="c-title">Observations with sharp edges</div><div class="c-meta">people · work · tiny power games</div></div><span class="c-chev">›</span></div>
-        <div class="c-divider"></div>
-        <div class="c-section-title">journal</div>
-        <div class="c-row"><div class="c-ico" style="background:linear-gradient(145deg,#224433,#113322)">☁️</div><div class="c-body"><div class="c-title">Notes I wrote instead of sleeping</div><div class="c-meta">fragments · half-finished thoughts</div></div><span class="c-chev">›</span></div>
-        <div class="c-row"><div class="c-ico" style="background:linear-gradient(145deg,#334422,#223311)">🌿</div><div class="c-body"><div class="c-title">Sentences too alive to delete</div><div class="c-meta">collected lines · always noticing</div></div><span class="c-chev">›</span></div>
-      </div>
-    </div>
-    <div class="status-bar-win"><span>4 items</span><span class="status-px">writing · essays · journal</span><span>sorakim95.github.io</span></div>
-  </div>
-
-  <!-- PROJECTS WINDOW -->
-  <div class="win" id="win-projects" style="top:80px;left:240px">
-    <div class="win-bar" data-win="win-projects">
-      <div class="wc cl" data-action="close" data-win="win-projects"></div>
-      <div class="wc mn" data-action="min" data-win="win-projects"></div>
-      <div class="wc mx" data-action="max" data-win="win-projects"></div>
-      <div class="win-title">🗂 Projects</div>
-    </div>
-    <div class="win-toolbar">
-      <div class="tb-btn">‹</div><div class="tb-btn">›</div>
-      <div class="tb-spacer"></div>
-      <input class="tb-search" placeholder="🔍 Search" readonly/>
-    </div>
-    <div class="win-body">
-      <div class="win-sidebar">
-        <div class="sb-head">Category</div>
-        <div class="sb-row on"><span class="sb-ico">📂</span>All</div>
-        <div class="sb-row"><span class="sb-ico">🧠</span>Reasoning</div>
-        <div class="sb-row"><span class="sb-ico">🔗</span>Navigation</div>
-        <div class="sb-row"><span class="sb-ico">🗄️</span>Corpus</div>
-      </div>
-      <div class="win-content">
-        <div class="c-section-title">Axis 01 · Reasoning</div>
-        <div class="c-row" ondblclick="openWin('win-proj-1')"><div class="c-ico" style="background:linear-gradient(145deg,#2255aa,#114488)">🧠</div><div class="c-body"><div class="c-title">Expanding Causal Reasoning under Closure Pressure</div><div class="c-meta">AI scaffold · N=20 · CSCW 2026 poster · preprint</div></div><span class="c-chev">›</span></div>
-        <div class="c-row" ondblclick="openWin('win-proj-2')"><div class="c-ico" style="background:linear-gradient(145deg,#334488,#223377)">⚠️</div><div class="c-body"><div class="c-title">Premature Convergence under Closure Pressure</div><div class="c-meta">Observational · N=20 · time-based · preprint</div></div><span class="c-chev">›</span></div>
-        <div class="c-divider"></div>
-        <div class="c-section-title">Axis 02 · Navigation</div>
-        <div class="c-row" ondblclick="openWin('win-proj-3')"><div class="c-ico" style="background:linear-gradient(145deg,#226633,#114422)">📋</div><div class="c-body"><div class="c-title">Procedural Visibility in SOP Navigation</div><div class="c-meta">Retrieval · N=20 · 500 synthetic SOPs · preprint</div></div><span class="c-chev">›</span></div>
-        <div class="c-row" ondblclick="openWin('win-proj-4')"><div class="c-ico" style="background:linear-gradient(145deg,#553322,#442211)">🔗</div><div class="c-body"><div class="c-title">Cross-Reference Visibility and Traceability</div><div class="c-meta">Graph-based nav · N=20 · preprint</div></div><span class="c-chev">›</span></div>
-        <div class="c-row" ondblclick="openWin('win-proj-5')"><div class="c-ico" style="background:linear-gradient(145deg,#443355,#332244)">🔄</div><div class="c-body"><div class="c-title">Navigation Friction and Loopback Behavior</div><div class="c-meta">Behavioral · N=20 · loopback tracking · preprint</div></div><span class="c-chev">›</span></div>
-        <div class="c-row" ondblclick="openWin('win-proj-6')"><div class="c-ico" style="background:linear-gradient(145deg,#335544,#224433)">📊</div><div class="c-body"><div class="c-title">Review Burden and Workflow Visibility</div><div class="c-meta">Dashboard · TF-IDF · 100 deviation-CAPA records · preprint</div></div><span class="c-chev">›</span></div>
-        <div class="c-divider"></div>
-        <div class="c-section-title">Corpus</div>
-        <div class="c-row" ondblclick="openWin('win-proj-7')"><div class="c-ico" style="background:linear-gradient(145deg,#664422,#553311)">📝</div><div class="c-body"><div class="c-title">Cognitive Friction in Procedural Documentation</div><div class="c-meta">Rule-based corpus · sentence-level · STS+HCI</div></div><span class="c-chev">›</span></div>
-        <div class="c-row" ondblclick="openWin('win-proj-8')"><div class="c-ico" style="background:linear-gradient(145deg,#334466,#223355)">🏛️</div><div class="c-body"><div class="c-title">FDA Warning Letters Corpus <span class="px px-badge">ACTIVE</span></div><div class="c-meta">N=50 · N=160 violations · 2016–2025 · 21 CFR 210/211</div></div><span class="c-chev">›</span></div>
-      </div>
-    </div>
-    <div class="status-bar-win"><span>8 projects</span><span class="status-px">HCI · corpus · reasoning · navigation</span><span>sorakim95.github.io</span></div>
-  </div>
-
-  <!-- PAPERS WINDOW -->
-  <div class="win" id="win-papers" style="top:100px;left:280px">
-    <div class="win-bar" data-win="win-papers">
-      <div class="wc cl" data-action="close" data-win="win-papers"></div>
-      <div class="wc mn" data-action="min" data-win="win-papers"></div>
-      <div class="wc mx" data-action="max" data-win="win-papers"></div>
-      <div class="win-title">📄 Papers</div>
-    </div>
-    <div class="win-toolbar">
-      <div class="tb-btn">‹</div><div class="tb-btn">›</div>
-      <div class="tb-spacer"></div>
-      <input class="tb-search" placeholder="🔍 Search papers" readonly/>
-    </div>
-    <div class="win-body">
-      <div class="win-sidebar">
-        <div class="sb-head">Series</div>
-        <div class="sb-row on"><span class="sb-ico">📑</span>All</div>
-        <div class="sb-row"><span class="sb-ico">🖥️</span>HCI · 5</div>
-        <div class="sb-row"><span class="sb-ico">🔬</span>STS · 4</div>
-      </div>
-      <div class="win-content">
-        <div class="c-section-title">HCI Papers · 5 preprints</div>
-        <div class="c-row"><div class="c-ico" style="background:linear-gradient(145deg,#334488,#223377)">🏗️</div><div class="c-body"><div class="c-title">How Regulated Systems Produce Responsibility <span class="px px-badge">UMBRELLA</span></div><div class="c-meta">Four-Layer Framework · Regulatory UX · SSRN forthcoming</div></div><a href="assets/kim_regulatoryUX_2026.pdf" target="_blank" style="color:#3377cc;font-size:11px;font-weight:700;text-decoration:none;flex-shrink:0">PDF↗</a></div>
-        <div class="c-row"><div class="c-ico" style="background:linear-gradient(145deg,#2255aa,#114488)">🧠</div><div class="c-body"><div class="c-title">Keeping Alternatives Alive</div><div class="c-meta">RCA scaffold · N=20+20 · CSCW 2026 poster · SSRN forthcoming</div></div><a href="assets/kim_scaffolder_2026.pdf" target="_blank" style="color:#3377cc;font-size:11px;font-weight:700;text-decoration:none;flex-shrink:0">PDF↗</a></div>
-        <div class="c-row"><div class="c-ico" style="background:linear-gradient(145deg,#226633,#114422)">📋</div><div class="c-body"><div class="c-title">From Retrieval to Reasoning</div><div class="c-meta">SOP accessibility · N=20 · 500 synthetic SOPs · SSRN forthcoming</div></div><a href="assets/kim_sop_2026.pdf" target="_blank" style="color:#3377cc;font-size:11px;font-weight:700;text-decoration:none;flex-shrink:0">PDF↗</a></div>
-        <div class="c-row"><div class="c-ico" style="background:linear-gradient(145deg,#553322,#442211)">🔗</div><div class="c-body"><div class="c-title">When Documents Don't Connect</div><div class="c-meta">Traceability · loopback · N=20+20 · SSRN forthcoming</div></div><a href="assets/kim_navigation_2026.pdf" target="_blank" style="color:#3377cc;font-size:11px;font-weight:700;text-decoration:none;flex-shrink:0">PDF↗</a></div>
-        <div class="c-row"><div class="c-ico" style="background:linear-gradient(145deg,#335544,#224433)">📊</div><div class="c-body"><div class="c-title">Friction Before Failure</div><div class="c-meta">Review burden · workflow visibility · N=20 · SSRN forthcoming</div></div><a href="assets/kim_observability_2026.pdf" target="_blank" style="color:#3377cc;font-size:11px;font-weight:700;text-decoration:none;flex-shrink:0">PDF↗</a></div>
-        <div class="c-divider"></div>
-        <div class="c-section-title">STS Foundations · 4 preprints</div>
-        <div class="c-row"><div class="c-ico" style="background:linear-gradient(145deg,#2255aa,#114488)">🔵</div><div class="c-body"><div class="c-title">Anticipated Accountability Convergence (AAC)</div><div class="c-meta">Structuring responsibility before action · SSRN forthcoming</div></div><a href="assets/kim_aac_2026.pdf" target="_blank" style="color:#3377cc;font-size:11px;font-weight:700;text-decoration:none;flex-shrink:0">PDF↗</a></div>
-        <div class="c-row"><div class="c-ico" style="background:linear-gradient(145deg,#226633,#114422)">🟢</div><div class="c-body"><div class="c-title">Cognitive Friction in Procedural Texts (CF)</div><div class="c-meta">Judgment under constraint · N=500 sentences · SSRN forthcoming</div></div><a href="assets/kim_cf_2026.pdf" target="_blank" style="color:#3377cc;font-size:11px;font-weight:700;text-decoration:none;flex-shrink:0">PDF↗</a></div>
-        <div class="c-row"><div class="c-ico" style="background:linear-gradient(145deg,#662299,#441177)">🟣</div><div class="c-body"><div class="c-title">Responsibility Convergence (RC)</div><div class="c-meta">Investigations · closure pressure · SSRN forthcoming</div></div><a href="assets/kim_rc_2026.pdf" target="_blank" style="color:#3377cc;font-size:11px;font-weight:700;text-decoration:none;flex-shrink:0">PDF↗</a></div>
-        <div class="c-row"><div class="c-ico" style="background:linear-gradient(145deg,#995522,#774411)">🟠</div><div class="c-body"><div class="c-title">Premature Accountability Convergence (PAC) <span class="px px-badge">4S</span></div><div class="c-meta">AI mediation · FDA N=50 · 4S Toronto 2026 · SSRN forthcoming</div></div><a href="assets/kim_pac_2026.pdf" target="_blank" style="color:#3377cc;font-size:11px;font-weight:700;text-decoration:none;flex-shrink:0">PDF↗</a></div>
-        <div class="c-divider"></div>
-        <div class="c-section-title">Conference</div>
-        <div class="c-row"><div class="c-ico" style="background:linear-gradient(145deg,#334466,#223355)">🎤</div><div class="c-body"><div class="c-title">CSCW 2026 Poster — Keeping Alternatives Alive</div><div class="c-meta">Comparison-preserving scaffold for RCA under closure pressure</div></div><a href="assets/CSCW2026_v1_0.pdf" target="_blank" style="color:#3377cc;font-size:11px;font-weight:700;text-decoration:none;flex-shrink:0">PDF↗</a></div>
-        <div class="c-row" style="align-items:flex-start;background:linear-gradient(90deg,#eef6ff,#f4f8ff);border-radius:8px;padding:10px 8px">
-          <div class="c-ico" style="background:linear-gradient(145deg,#995522,#774411);flex-shrink:0">🟠</div>
-          <div class="c-body"><div class="c-title" style="margin-bottom:5px">4S Toronto 2026 — PAC Abstract</div><div class="c-meta" style="line-height:1.65;color:#334">AI-mediated representations in regulated investigations reorganize when judgment closes and how responsibility stabilizes. PAC is not a cognitive bias but a property of investigative environments produced through closure pressure, documentation structure, and representational design. Grounded in FDA Warning Letters (N=50, 159/160 observations), timed pilot (N=20), and counter-convergence scaffold (N=20).</div></div>
-        </div>
-      </div>
-    </div>
-    <div class="status-bar-win"><span>5 HCI · 4 STS · 1 poster</span><span class="status-px">ORCID: 0009-0003-0856-4193</span><span>sorakim95.github.io</span></div>
-  </div>
-
-  <!-- DIARY WINDOW -->
-  <div class="win" id="win-diary" style="top:110px;left:300px;width:480px">
-    <div class="win-bar" data-win="win-diary">
-      <div class="wc cl" data-action="close" data-win="win-diary"></div>
-      <div class="wc mn" data-action="min" data-win="win-diary"></div>
-      <div class="wc mx" data-action="max" data-win="win-diary"></div>
-      <div class="win-title">📔 Diary</div>
-    </div>
-    <div class="win-toolbar">
-      <div class="tb-btn">+ New Entry</div>
-      <div class="tb-spacer"></div>
-      <input class="tb-search" placeholder="🔍 Search diary" readonly/>
-    </div>
-    <div class="win-body">
-      <div class="win-content" style="background:#fffef8">
-        <div class="c-section-title">March 2026</div>
-        <div class="c-row" style="align-items:flex-start">
-          <div style="font-size:11px;font-weight:700;color:#886;width:40px;flex-shrink:0;padding-top:2px;text-align:center">MAR<br><span style="font-size:16px;color:#334">25</span></div>
-          <div class="c-body"><div class="c-title">thinking too hard about macOS aesthetics</div><div class="c-meta" style="line-height:1.65;margin-top:4px">started redesigning the website again. aqua felt right — something about the water and glass. also submitted to 4S Toronto today.</div></div>
-        </div>
-        <div class="c-divider"></div>
-        <div class="c-row" style="align-items:flex-start">
-          <div style="font-size:11px;font-weight:700;color:#886;width:40px;flex-shrink:0;padding-top:2px;text-align:center">MAR<br><span style="font-size:16px;color:#334">18</span></div>
-          <div class="c-body"><div class="c-title">FDA data finally making sense</div><div class="c-meta" style="line-height:1.65;margin-top:4px">N=160 violations coded. patterns are showing up. the gap between what the procedure says and what the warning letter cites — that's the thing.</div></div>
-        </div>
-        <div class="c-divider"></div>
-        <div class="c-row" style="align-items:flex-start">
-          <div style="font-size:11px;font-weight:700;color:#886;width:40px;flex-shrink:0;padding-top:2px;text-align:center">MAR<br><span style="font-size:16px;color:#334">10</span></div>
-          <div class="c-body"><div class="c-title">cold email to Ignacio Cruz sent</div><div class="c-meta" style="line-height:1.65;margin-top:4px">finally. scheduled for late may. now we wait. iced americano. patterns. always noticing.</div></div>
-        </div>
-      </div>
-    </div>
-    <div class="status-bar-win"><span>3 entries</span><span class="status-px">diary · march 2026</span><span>sorakim95.github.io</span></div>
-  </div>
-
-  <!-- ABOUT WINDOW -->
-  <div class="win" id="win-about" style="top:60px;left:160px;width:580px">
-    <div class="win-bar" data-win="win-about">
-      <div class="wc cl" data-action="close" data-win="win-about"></div>
-      <div class="wc mn" data-action="min" data-win="win-about"></div>
-      <div class="wc mx" data-action="max" data-win="win-about"></div>
-      <div class="win-title">👤 About — Sora Kim</div>
-    </div>
-    <div class="win-toolbar">
-      <div class="tb-spacer"></div>
-      <span style="font-family:'Press Start 2P',monospace;font-size:7px;color:#446">QC Project Lead · Researcher · Seoul</span>
-    </div>
-    <div class="win-body">
-      <div class="win-content">
-        <div class="c-hero">
-          <div class="c-avatar"><img src="assets/kimsorakim.jpg" alt="Sora"/></div>
-          <div>
-            <div class="c-name">Sora Kim</div>
-            <div class="c-sub" style="line-height:1.75">I notice things a little too hard — patterns, tensions, the quiet friction no one names. Then I write them down, and keep turning them over until they become something worth keeping.<br><br>9-to-6, I'm a QC Project Lead. 6-to-9, I'm a researcher. It's a strange way to live, but an interesting one.</div>
-            <div class="c-chips" style="margin-top:10px">
-              <span class="chip">Seoul 🌱</span>
-              <span class="chip gr">HCI · STS</span>
-              <span class="chip pu">always noticing</span>
-            </div>
-          </div>
-        </div>
-        <div class="c-section-title">how I got here</div>
-        <div style="font-size:13px;color:#334;line-height:1.80;margin-bottom:14px;padding:12px 14px;background:linear-gradient(135deg,#eef6ff,#f4f8ff);border-left:3px solid #3377cc;border-radius:0 8px 8px 0">
-          I started thinking seriously about accountability because I was living inside it every day — navigating GMP systems, writing deviation reports, watching how formal structures shaped what could and couldn't be said about what went wrong.<br><br>Aviation has human factors research. Healthcare has patient safety UX. Finance has interface compliance design. Pharmaceutical QC workers operate inside some of the most tightly regulated environments on earth — and somehow, the question of how that system design shapes their reasoning, judgment, and accountability has stayed mostly unasked.<br><br>That gap is where this research program lives.
-        </div>
-        <div class="c-section-title">research focus</div>
-        <div style="font-size:13px;color:#334;line-height:1.75;margin-bottom:14px">I study how accountability is structured in regulated work — and how system design shapes which causal explanations remain available before responsibility settles. My work combines HCI experimentation with STS analysis, using pharmaceutical GMP environments as a primary empirical site.</div>
-        <div class="c-divider"></div>
-        <div class="c-section-title">skills & methods</div>
-        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px">
-          <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;background:#eef4ff;color:#336;border:1px solid #ccddff">Usability testing</span>
-          <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;background:#eef4ff;color:#336;border:1px solid #ccddff">Think-aloud</span>
-          <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;background:#eef4ff;color:#336;border:1px solid #ccddff">Qualitative coding</span>
-          <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;background:#eef4ff;color:#336;border:1px solid #ccddff">Corpus analysis</span>
-          <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;background:#effcf2;color:#226;border:1px solid #bbddcc">Python</span>
-          <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;background:#effcf2;color:#226;border:1px solid #bbddcc">Streamlit</span>
-          <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;background:#effcf2;color:#226;border:1px solid #bbddcc">R</span>
-          <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;background:#effcf2;color:#226;border:1px solid #bbddcc">HTML/CSS</span>
-          <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;background:#f8f0ff;color:#553;border:1px solid #ddccff">Korean (native)</span>
-          <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;background:#f8f0ff;color:#553;border:1px solid #ddccff">English (fluent)</span>
-          <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;background:#f8f0ff;color:#553;border:1px solid #ddccff">Japanese (fluent)</span>
-        </div>
-        <div class="c-divider"></div>
-        <div class="c-section-title">find me</div>
-        <div class="c-row" onclick="window.open('https://sorakim95.github.io','_blank')">
-          <div class="c-ico" style="background:linear-gradient(145deg,#226688,#115577)">🌐</div>
-          <div class="c-body"><div class="c-title">sorakim95.github.io</div><div class="c-meta">research · papers · projects</div></div>
-          <span class="c-chev">↗</span>
-        </div>
-        <div class="c-row" onclick="window.open('mailto:sorakim.lab@gmail.com')">
-          <div class="c-ico" style="background:linear-gradient(145deg,#2255aa,#114488)">✉️</div>
-          <div class="c-body"><div class="c-title">sorakim.lab@gmail.com</div><div class="c-meta">always open</div></div>
-          <span class="c-chev">↗</span>
-        </div>
-        <div class="c-row" onclick="window.open('https://instagram.com/sora.rchive_','_blank')">
-          <div class="c-ico" style="background:linear-gradient(145deg,#aa3366,#882244)">📷</div>
-          <div class="c-body"><div class="c-title">@sora.rchive_</div><div class="c-meta">Instagram · the slower side of things</div></div>
-          <span class="c-chev">↗</span>
-        </div>
-      </div>
-    </div>
-    <div class="status-bar-win"><span>QC Project Lead · Researcher</span><span class="status-px">Seoul · 9to6 + 6to9</span><span>sorakim95.github.io</span></div>
-  </div>
-
-  <!-- PROJECT DETAIL WINDOWS (1-8) -->
-  <div class="win" id="win-proj-1" style="top:80px;left:180px;width:560px">
-    <div class="win-bar" data-win="win-proj-1"><div class="wc cl" data-action="close" data-win="win-proj-1"></div><div class="wc mn" data-action="min" data-win="win-proj-1"></div><div class="wc mx" data-action="max" data-win="win-proj-1"></div><div class="win-title">🧠 Expanding Causal Reasoning</div></div>
-    <div class="win-toolbar"><div class="tb-btn" onclick="openWin('win-projects')">‹ Projects</div><div class="tb-spacer"></div><span style="font-size:11px;color:#446;font-weight:600">Axis 01 · Reasoning</span></div>
-    <div class="win-body"><div class="proj-win-content">
-      <div class="proj-header"><div class="proj-axis">Reasoning · R1 · Pilot Study</div><div class="proj-title">Expanding Causal Reasoning under Closure Pressure</div><div class="proj-tags"><span class="proj-tag">AI scaffold</span><span class="proj-tag gr">reasoning</span><span class="proj-tag pu">CSCW 2026</span><span class="proj-tag or">preprint</span></div></div>
-      <div class="proj-section"><div class="proj-section-title">Description</div><div class="proj-desc">Premature causal convergence in GMP investigations can be shaped by closure pressure — reasoning may narrow before alternative contributors are fully explored. This study deploys a structured AI scaffold as a comparison enforcer, keeping alternative explanations visible long enough to delay premature convergence without automating the conclusion.</div></div>
-      <div class="proj-section"><div class="proj-section-title">Key Findings</div><div class="proj-findings"><div class="proj-finding-row">18/20 participants broadened causal reasoning when scaffold was active</div><div class="proj-finding-row">15/20 reconsidered initial attribution after scaffolded comparison</div><div class="proj-finding-row">Scaffold use delayed closure and expanded the range of comparable explanations</div></div></div>
-      <div class="proj-section"><div class="proj-section-title">Methodology</div><div class="proj-method-row"><span class="proj-method-chip">N=20</span><span class="proj-method-chip">Usability testing</span><span class="proj-method-chip">Think-aloud</span><span class="proj-method-chip">Streamlit</span><span class="proj-method-chip">Python</span></div></div>
-    </div></div>
-    <div class="status-bar-win"><span>R1</span><span class="status-px">CSCW 2026 poster</span><span>sorakim95.github.io</span></div>
-  </div>
-
-  <div class="win" id="win-proj-2" style="top:90px;left:200px;width:560px">
-    <div class="win-bar" data-win="win-proj-2"><div class="wc cl" data-action="close" data-win="win-proj-2"></div><div class="wc mn" data-action="min" data-win="win-proj-2"></div><div class="wc mx" data-action="max" data-win="win-proj-2"></div><div class="win-title">⚠️ Premature Convergence</div></div>
-    <div class="win-toolbar"><div class="tb-btn" onclick="openWin('win-projects')">‹ Projects</div><div class="tb-spacer"></div><span style="font-size:11px;color:#446;font-weight:600">Axis 01 · Reasoning</span></div>
-    <div class="win-body"><div class="proj-win-content">
-      <div class="proj-header"><div class="proj-axis">Reasoning · R2 · Time Reflection</div><div class="proj-title">Premature Convergence under Closure Pressure</div><div class="proj-tags"><span class="proj-tag">observational</span><span class="proj-tag gr">reasoning</span><span class="proj-tag or">preprint</span></div></div>
-      <div class="proj-section"><div class="proj-section-title">Description</div><div class="proj-desc">Early closure is not always deliberate — time pressure and the need for a quickly documentable explanation can push reasoning toward a single cause. A companion empirical study examining how single-cause reasoning broadens when investigators are given more time and interpretive space before closure.</div></div>
-      <div class="proj-section"><div class="proj-section-title">Key Findings</div><div class="proj-findings"><div class="proj-finding-row">Given more time and interpretive space, explanations broadened beyond an initial single-cause account</div><div class="proj-finding-row">Forms the observational half of the two-study paper on responsibility convergence under closure pressure</div></div></div>
-      <div class="proj-section"><div class="proj-section-title">Methodology</div><div class="proj-method-row"><span class="proj-method-chip">N=20</span><span class="proj-method-chip">Time-based observation</span><span class="proj-method-chip">Qualitative coding</span><span class="proj-method-chip">Pilot</span></div></div>
-    </div></div>
-    <div class="status-bar-win"><span>R2</span><span class="status-px">companion to R1</span><span>sorakim95.github.io</span></div>
-  </div>
-
-  <div class="win" id="win-proj-3" style="top:100px;left:220px;width:560px">
-    <div class="win-bar" data-win="win-proj-3"><div class="wc cl" data-action="close" data-win="win-proj-3"></div><div class="wc mn" data-action="min" data-win="win-proj-3"></div><div class="wc mx" data-action="max" data-win="win-proj-3"></div><div class="win-title">📋 Procedural Visibility in SOP Nav</div></div>
-    <div class="win-toolbar"><div class="tb-btn" onclick="openWin('win-projects')">‹ Projects</div><div class="tb-spacer"></div><span style="font-size:11px;color:#446;font-weight:600">Axis 02 · Navigation</span></div>
-    <div class="win-body"><div class="proj-win-content">
-      <div class="proj-header"><div class="proj-axis">Navigation · N1 · Pilot Study</div><div class="proj-title">Procedural Visibility in SOP Navigation</div><div class="proj-tags"><span class="proj-tag">retrieval</span><span class="proj-tag gr">navigation</span><span class="proj-tag or">preprint</span></div></div>
-      <div class="proj-section"><div class="proj-section-title">Description</div><div class="proj-desc">Document inaccessibility creates interpretive burden upstream of formal error, turning retrieval difficulty into later judgment difficulty and narrowing what can be compared in practice. An external retrieval intervention makes scanned SOP archives searchable without altering validated systems.</div></div>
-      <div class="proj-section"><div class="proj-section-title">Key Findings</div><div class="proj-findings"><div class="proj-finding-row">Reduced retrieval time from ~6 min to ~1 min</div><div class="proj-finding-row">Surfaced invisible onboarding labor upstream of formal quality records</div></div></div>
-      <div class="proj-section"><div class="proj-section-title">Methodology</div><div class="proj-method-row"><span class="proj-method-chip">N=20</span><span class="proj-method-chip">500 synthetic SOPs</span><span class="proj-method-chip">Streamlit</span><span class="proj-method-chip">Python</span></div></div>
-    </div></div>
-    <div class="status-bar-win"><span>N1</span><span class="status-px">500 synthetic SOPs</span><span>sorakim95.github.io</span></div>
-  </div>
-
-  <div class="win" id="win-proj-4" style="top:110px;left:240px;width:560px">
-    <div class="win-bar" data-win="win-proj-4"><div class="wc cl" data-action="close" data-win="win-proj-4"></div><div class="wc mn" data-action="min" data-win="win-proj-4"></div><div class="wc mx" data-action="max" data-win="win-proj-4"></div><div class="win-title">🔗 Cross-Reference Visibility</div></div>
-    <div class="win-toolbar"><div class="tb-btn" onclick="openWin('win-projects')">‹ Projects</div><div class="tb-spacer"></div><span style="font-size:11px;color:#446;font-weight:600">Axis 02 · Navigation</span></div>
-    <div class="win-body"><div class="proj-win-content">
-      <div class="proj-header"><div class="proj-axis">Navigation · N2 · Pilot Study</div><div class="proj-title">Cross-Reference Visibility and Traceability</div><div class="proj-tags"><span class="proj-tag">traceability</span><span class="proj-tag gr">navigation</span><span class="proj-tag or">preprint</span></div></div>
-      <div class="proj-section"><div class="proj-section-title">Description</div><div class="proj-desc">Traceability gaps are not merely maintenance defects — they redistribute hidden connective labor onto practitioners. A traceability intervention makes document linkage, broken paths, and lifecycle mismatches visible across document networks.</div></div>
-      <div class="proj-section"><div class="proj-section-title">Key Findings</div><div class="proj-findings"><div class="proj-finding-row">30–60% reduction in path reconstruction time</div><div class="proj-finding-row">Cross-reference visibility made document paths more directly traceable at the point of use</div></div></div>
-      <div class="proj-section"><div class="proj-section-title">Methodology</div><div class="proj-method-row"><span class="proj-method-chip">N=20</span><span class="proj-method-chip">Graph-based nav</span><span class="proj-method-chip">Streamlit</span><span class="proj-method-chip">Python</span></div></div>
-    </div></div>
-    <div class="status-bar-win"><span>N2</span><span class="status-px">graph-based traceability</span><span>sorakim95.github.io</span></div>
-  </div>
-
-  <div class="win" id="win-proj-5" style="top:120px;left:260px;width:560px">
-    <div class="win-bar" data-win="win-proj-5"><div class="wc cl" data-action="close" data-win="win-proj-5"></div><div class="wc mn" data-action="min" data-win="win-proj-5"></div><div class="wc mx" data-action="max" data-win="win-proj-5"></div><div class="win-title">🔄 Navigation Friction</div></div>
-    <div class="win-toolbar"><div class="tb-btn" onclick="openWin('win-projects')">‹ Projects</div><div class="tb-spacer"></div><span style="font-size:11px;color:#446;font-weight:600">Axis 02 · Navigation</span></div>
-    <div class="win-body"><div class="proj-win-content">
-      <div class="proj-header"><div class="proj-axis">Navigation · N3 · Pilot Study</div><div class="proj-title">Navigation Friction and Loopback Behavior</div><div class="proj-tags"><span class="proj-tag">behavioral</span><span class="proj-tag gr">navigation</span><span class="proj-tag or">preprint</span></div></div>
-      <div class="proj-section"><div class="proj-section-title">Description</div><div class="proj-desc">Loopbacks are not simply user error — they can mark moments where document structure failed to resolve a judgment demand on the first pass. A behavioral observation intervention captures navigation paths, hesitation, and cross-reference jump patterns to make otherwise invisible document friction observable.</div></div>
-      <div class="proj-section"><div class="proj-section-title">Key Findings</div><div class="proj-findings"><div class="proj-finding-row">Loopbacks surfaced structural friction and moments of navigation hesitation across sessions</div><div class="proj-finding-row">Contributed upstream evidence on where procedural judgment remains unresolved inside document systems</div></div></div>
-      <div class="proj-section"><div class="proj-section-title">Methodology</div><div class="proj-method-row"><span class="proj-method-chip">N=20</span><span class="proj-method-chip">Loopback tracking</span><span class="proj-method-chip">Streamlit</span><span class="proj-method-chip">Python</span></div></div>
-    </div></div>
-    <div class="status-bar-win"><span>N3</span><span class="status-px">loopback tracking</span><span>sorakim95.github.io</span></div>
-  </div>
-
-  <div class="win" id="win-proj-6" style="top:130px;left:280px;width:560px">
-    <div class="win-bar" data-win="win-proj-6"><div class="wc cl" data-action="close" data-win="win-proj-6"></div><div class="wc mn" data-action="min" data-win="win-proj-6"></div><div class="wc mx" data-action="max" data-win="win-proj-6"></div><div class="win-title">📊 Review Burden</div></div>
-    <div class="win-toolbar"><div class="tb-btn" onclick="openWin('win-projects')">‹ Projects</div><div class="tb-spacer"></div><span style="font-size:11px;color:#446;font-weight:600">Axis 02 · Navigation</span></div>
-    <div class="win-body"><div class="proj-win-content">
-      <div class="proj-header"><div class="proj-axis">Navigation · N4 · Pilot Study</div><div class="proj-title">Review Burden and Workflow Visibility</div><div class="proj-tags"><span class="proj-tag">dashboard</span><span class="proj-tag gr">navigation</span><span class="proj-tag or">preprint</span></div></div>
-      <div class="proj-section"><div class="proj-section-title">Description</div><div class="proj-desc">Coordination breakdown is produced gradually when review burden stays invisible until delay has already accumulated. A workflow visibility intervention makes review delays, revision loops, and feedback burden legible without modifying validated systems.</div></div>
-      <div class="proj-section"><div class="proj-section-title">Key Findings</div><div class="proj-findings"><div class="proj-finding-row">Dashboard rendered review delays, revision loops, and feedback burden more legible across sessions</div><div class="proj-finding-row">Contributed coordination-level evidence on how hidden review work shapes accountability conditions</div></div></div>
-      <div class="proj-section"><div class="proj-section-title">Methodology</div><div class="proj-method-row"><span class="proj-method-chip">N=20</span><span class="proj-method-chip">100 deviation-CAPA records</span><span class="proj-method-chip">TF-IDF</span><span class="proj-method-chip">6-tab dashboard</span><span class="proj-method-chip">Streamlit</span></div></div>
-    </div></div>
-    <div class="status-bar-win"><span>N4</span><span class="status-px">100 deviation-CAPA records</span><span>sorakim95.github.io</span></div>
-  </div>
-
-  <div class="win" id="win-proj-7" style="top:140px;left:300px;width:560px">
-    <div class="win-bar" data-win="win-proj-7"><div class="wc cl" data-action="close" data-win="win-proj-7"></div><div class="wc mn" data-action="min" data-win="win-proj-7"></div><div class="wc mx" data-action="max" data-win="win-proj-7"></div><div class="win-title">📝 Cognitive Friction Corpus</div></div>
-    <div class="win-toolbar"><div class="tb-btn" onclick="openWin('win-projects')">‹ Projects</div><div class="tb-spacer"></div><span style="font-size:11px;color:#446;font-weight:600">Corpus</span></div>
-    <div class="win-body"><div class="proj-win-content">
-      <div class="proj-header"><div class="proj-axis">Language · Corpus · N-text</div><div class="proj-title">Cognitive Friction in Procedural Documentation</div><div class="proj-tags"><span class="proj-tag">corpus</span><span class="proj-tag gr">language</span><span class="proj-tag pu">STS+HCI</span><span class="proj-tag or">preprint</span></div></div>
-      <div class="proj-section"><div class="proj-section-title">Description</div><div class="proj-desc">Procedural sentences embed structurally produced judgment demands through conditional branching, cross-references, exception structures, and discretionary qualifiers. A rule-based corpus analysis operationalizes cognitive friction as a measurable sentence-level property of procedural language.</div></div>
-      <div class="proj-section"><div class="proj-section-title">Key Findings</div><div class="proj-findings"><div class="proj-finding-row">Conditional branching was the most prevalent friction feature (33.9%)</div><div class="proj-finding-row">18.6% of sentences exhibited co-occurring features — structurally compounded judgment demand</div></div></div>
-      <div class="proj-section"><div class="proj-section-title">Methodology</div><div class="proj-method-row"><span class="proj-method-chip">Rule-based corpus</span><span class="proj-method-chip">Sentence-level analysis</span><span class="proj-method-chip">Python</span><span class="proj-method-chip">GitHub</span></div></div>
-    </div></div>
-    <div class="status-bar-win"><span>Corpus</span><span class="status-px">github.com/sorakim-lab</span><span>sorakim95.github.io</span></div>
-  </div>
-
-  <div class="win" id="win-proj-8" style="top:150px;left:320px;width:560px">
-    <div class="win-bar" data-win="win-proj-8"><div class="wc cl" data-action="close" data-win="win-proj-8"></div><div class="wc mn" data-action="min" data-win="win-proj-8"></div><div class="wc mx" data-action="max" data-win="win-proj-8"></div><div class="win-title">🏛️ FDA Warning Letters</div></div>
-    <div class="win-toolbar"><div class="tb-btn" onclick="openWin('win-projects')">‹ Projects</div><div class="tb-spacer"></div><span style="font-size:11px;color:#446;font-weight:600">Corpus · ACTIVE</span></div>
-    <div class="win-body"><div class="proj-win-content">
-      <div class="proj-header"><div class="proj-axis">Corpus · PAC Empirical · 2016–2025</div><div class="proj-title">FDA Warning Letters Corpus</div><div class="proj-tags"><span class="proj-tag">FDA</span><span class="proj-tag gr">PAC</span><span class="proj-tag pu">STS</span><span class="proj-tag or">active</span></div></div>
-      <div class="proj-section"><div class="proj-section-title">Description</div><div class="proj-desc">Qualitative document analysis of FDA Warning Letters as empirical grounding for the PAC framework. The corpus examines how accountability gets structured in regulatory documentation — tracking the gap between what procedures prescribe and what violation observations ultimately cite as causal.</div></div>
-      <div class="proj-section"><div class="proj-section-title">Key Findings</div><div class="proj-findings"><div class="proj-finding-row">N=160 violations coded across responsibility attribution dimensions</div><div class="proj-finding-row">159/160 observations converging onto the regulated firm — documentary form compresses interpretive space</div><div class="proj-finding-row">Submitted to 4S Toronto 2026 — Panel 74: TechnoPower</div></div></div>
-      <div class="proj-section"><div class="proj-section-title">Methodology</div><div class="proj-method-row"><span class="proj-method-chip">N=50 letters</span><span class="proj-method-chip">N=160 violations</span><span class="proj-method-chip">21 CFR 210/211</span><span class="proj-method-chip">Qualitative coding</span><span class="proj-method-chip">2016–2025</span></div></div>
-    </div></div>
-    <div class="status-bar-win"><span>N=50 · N=160</span><span class="status-px">4S Toronto 2026</span><span>sorakim95.github.io</span></div>
-  </div>
-
-  <!-- MAIL WINDOW -->
-  <div class="win" id="win-mail" style="top:140px;left:180px;width:540px">
-    <div class="win-bar" data-win="win-mail">
-      <div class="wc cl" data-action="close" data-win="win-mail"></div>
-      <div class="wc mn" data-action="min" data-win="win-mail"></div>
-      <div class="wc mx" data-action="max" data-win="win-mail"></div>
-      <div class="win-title">✉️ New Message</div>
-    </div>
-    <div class="win-toolbar">
-      <div class="tb-btn" onclick="sendMail()">📤 Send</div>
-      <div class="tb-spacer"></div>
-      <span style="font-size:11px;color:#446;font-weight:600">sorakim.lab@gmail.com</span>
-    </div>
-    <div class="win-body" style="max-height:none;flex:1">
-      <div class="mail-compose">
-        <div class="mail-field"><span style="width:36px;flex-shrink:0">To:</span><input id="mail-to" value="sorakim.lab@gmail.com" readonly/></div>
-        <div class="mail-field"><span style="width:36px;flex-shrink:0">From:</span><input id="mail-from" placeholder="your@email.com"/></div>
-        <div class="mail-field"><span style="width:36px;flex-shrink:0">Re:</span><input id="mail-subj" placeholder="Subject"/></div>
-        <textarea class="mail-body-area" id="mail-body" placeholder="Write your message here..."></textarea>
-        <button class="mail-send-btn" onclick="sendMail()">Send Message ↗</button>
-      </div>
-    </div>
-    <div class="status-bar-win"><span>New Message</span><span class="status-px">sorakim.lab@gmail.com</span><span>sorakim95.github.io</span></div>
-  </div>
-
-  <!-- DOCK -->
-  <div id="dock">
-    <div class="d-ico" data-win="win-home"><span class="d-ico-img">🏠</span><div class="d-label">Home</div><div class="d-dot open"></div></div>
-    <div class="d-ico" data-win="win-writing"><span class="d-ico-img">✍️</span><div class="d-label">Writing</div><div class="d-dot"></div></div>
-    <div class="d-ico" data-win="win-projects"><span class="d-ico-img">🗂</span><div class="d-label">Projects</div><div class="d-dot"></div></div>
-    <div class="d-ico" data-win="win-papers"><span class="d-ico-img">📄</span><div class="d-label">Papers</div><div class="d-dot"></div></div>
-    <div class="d-ico" data-win="win-diary"><span class="d-ico-img">📔</span><div class="d-label">Diary</div><div class="d-dot"></div></div>
-    <div class="d-ico" data-win="win-about"><span class="d-ico-img">👤</span><div class="d-label">About</div><div class="d-dot"></div></div>
-    <div class="d-sep"></div>
-    <div class="d-ico" data-win="win-mail"><span class="d-ico-img">✉️</span><div class="d-label">Mail</div><div class="d-dot"></div></div>
-    <div class="d-ico" data-win="" data-href="https://github.com/sorakim-lab"><span class="d-ico-img">💻</span><div class="d-label">GitHub</div><div class="d-dot"></div></div>
-    <div class="d-ico" data-win="" data-href="https://instagram.com/sora.rchive_"><span class="d-ico-img">📷</span><div class="d-label">Instagram</div><div class="d-dot"></div></div>
+  <div class="input-row">
+    <span class="input-ps1">sora@seoul ~<span class="sym"> $</span></span>
+    <input id="cmd" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="type 'help' →"/>
   </div>
 </div>
+<script>
+const out = document.getElementById('output');
+const cmd = document.getElementById('cmd');
+const term = document.getElementById('term');
+const history_cmds = [];
+let hist_idx = -1;
 
-<script src="app.js"></script>
+// ── helpers ──
+function scrollBottom(){term.scrollTop = term.scrollHeight}
+
+function addLine(cfg, delay=0){
+  return new Promise(res=>{
+    setTimeout(()=>{
+      const div = document.createElement('div');
+      div.className = 'line typed ' + (cfg.t==='blank'?'blank':cfg.t==='head'?'head':cfg.t==='err'?'err':'out');
+      div.innerHTML = cfg.v || '';
+      out.appendChild(div);
+      scrollBottom();
+      res();
+    }, delay);
+  });
+}
+
+function addPromptLine(text){
+  const div = document.createElement('div');
+  div.className = 'line prompt-line';
+  div.innerHTML = `<span class="ps1">sora@seoul ~<span class="sym"> $</span></span> <span style="font-size:13px">${text}</span>`;
+  out.appendChild(div);
+}
+
+async function printLines(lines){
+  for(let i=0;i<lines.length;i++){
+    await addLine(lines[i], i*38);
+  }
+}
+
+// ── boot ──
+async function boot(){
+  const bootLines = [
+    {t:'out', v:`<span class="pixel" style="font-family:var(--pixel);font-size:7px;line-height:2.2;color:var(--terra)">  ██████╗  ██████╗ ██████╗  █████╗ </span>`},
+    {t:'out', v:`<span style="font-family:var(--pixel);font-size:7px;line-height:2.2;color:var(--pink)">  ██╔════╝ ██╔═══██╗██╔══██╗██╔══██╗</span>`},
+    {t:'out', v:`<span style="font-family:var(--pixel);font-size:7px;line-height:2.2;color:var(--yellow)">  ╚█████╗  ██║   ██║██████╔╝███████║</span>`},
+    {t:'out', v:`<span style="font-family:var(--pixel);font-size:7px;line-height:2.2;color:var(--mint)">   ╚═══██╗ ██║   ██║██╔══██╗██╔══██║</span>`},
+    {t:'out', v:`<span style="font-family:var(--pixel);font-size:7px;line-height:2.2;color:var(--blue)">  ██████╔╝ ╚██████╔╝██║  ██║██║  ██║</span>`},
+    {t:'out', v:`<span style="font-family:var(--pixel);font-size:7px;line-height:2.2;color:var(--dim)">  ╚═════╝   ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝</span>`},
+    {t:'blank'},
+    {t:'out', v:`<span class="mi">sora-os</span> <span class="ye">2026.03</span> LTS — powered by 🐧 curiosity`},
+    {t:'out', v:`kernel: <span class="te">hci-sts-hybrid</span> · shell: <span class="pi">sora-sh</span> · locale: Seoul/KR`},
+    {t:'blank'},
+    {t:'out', v:`Loading <span class="te">accountability.ko</span>... <span class="mi">OK</span>`},
+    {t:'out', v:`Loading <span class="te">latte-art.ko</span>...     <span class="mi">OK</span>`},
+    {t:'out', v:`Loading <span class="te">ratatouille.ko</span>...   <span class="mi">OK</span>`},
+    {t:'blank'},
+    {t:'out', v:`<span class="pi">Welcome, visitor.</span> Type <span class="te">help</span> to see what's here.`},
+    {t:'out', v:`<span class="dm">tip: try whoami · ls writing · cat diary.txt</span>`},
+    {t:'blank'},
+  ];
+  for(let i=0;i<bootLines.length;i++){
+    await addLine(bootLines[i], i*55);
+  }
+}
+boot();
+
+// ── commands ──
+const commands = {
+  help: ()=>[
+    {t:'head', v:'// AVAILABLE COMMANDS'},
+    {t:'out', v:`  <span class="te">whoami</span>                     — who is sora?`},
+    {t:'out', v:`  <span class="te">cat about.txt</span>              — more about me`},
+    {t:'out', v:`  <span class="te">cat diary.txt</span>              — recent diary entries`},
+    {t:'out', v:`  <span class="te">ls writing</span>                 — essays & journal`},
+    {t:'out', v:`  <span class="te">cat [filename]</span>             — read an essay`},
+    {t:'out', v:`  <span class="te">ls papers</span>                  — HCI + STS papers`},
+    {t:'out', v:`  <span class="te">ls projects</span>                — research projects`},
+    {t:'out', v:`  <span class="te">updates</span>                    — latest news`},
+    {t:'out', v:`  <span class="te">contact</span>                    — get in touch + CV`},
+    {t:'out', v:`  <span class="pi">neofetch</span>                   — system info`},
+    {t:'out', v:`  <span class="pi">pwd</span>                        — current directory`},
+    {t:'out', v:`  <span class="pi">history</span>                    — command history`},
+    {t:'out', v:`  <span class="pi">fortune</span>                    — random sora quote`},
+    {t:'out', v:`  <span class="mi">sudo make-coffee</span>           — ☕ latte art`},
+    {t:'out', v:`  <span class="mi">ping sorakim-lab.github.io</span> — ping research site`},
+    {t:'out', v:`  <span class="mi">grep "ratatouille" about.txt</span> — 🐀`},
+    {t:'out', v:`  <span class="dm">clear</span>                      — clear terminal`},
+    {t:'blank'},
+    {t:'out', v:`  <b>tip:</b> press <span class="te">Tab</span> to autocomplete · <span class="te">↑↓</span> for history`},
+    {t:'blank'},
+  ],
+
+  whoami: ()=>[
+    {t:'blank'},
+    {t:'out', v:`<span class="te">Sora Kim</span> · QC Project Lead & HCI Researcher`},
+    {t:'blank'},
+    {t:'out', v:`  <span class="mi">location</span>  Seoul, South Korea 🌱`},
+    {t:'out', v:`  <span class="mi">prev</span>      Tokyo 🗼 · Boston 🦞`},
+    {t:'out', v:`  <span class="mi">field</span>     HCI × STS · pharmaceutical GMP`},
+    {t:'out', v:`  <span class="mi">papers</span>    9 in progress (v2.0 under SSRN review)`},
+    {t:'out', v:`  <span class="mi">schedule</span>  9-to-6: QC. 6-to-9: research.`},
+    {t:'out', v:`  <span class="mi">vibe</span>      soft but sharp · always noticing`},
+    {t:'out', v:`  <span class="mi">latte art</span> yes (3yr barista · rosetta certified)`},
+    {t:'out', v:`  <span class="mi">japanese</span>  fluent enough to argue — Tokyo 1.5yr 🗼`},
+    {t:'out', v:`  <span class="mi">french</span>    croissant & baguette only 🥐`},
+    {t:'out', v:`  <span class="mi">spanish</span>   bad bunny method 📻`},
+    {t:'out', v:`  <span class="mi">film</span>      Ratatouille 🐀 (top tier, non-negotiable)`},
+    {t:'blank'},
+  ],
+
+  'cat about.txt': ()=>[
+    {t:'blank'},
+    {t:'out', v:`<img src="assets/kimsorakim.jpg" style="width:80px;height:80px;border-radius:50%;object-fit:cover;object-position:center 15%;border:2px solid var(--terra);display:block;margin-bottom:10px;box-shadow:3px 3px 0 var(--terra)"/>`},
+    {t:'head', v:'// about.txt'},
+    {t:'out', v:`okay so. hi. I'm <span class="te">Sora</span>.`},
+    {t:'blank'},
+    {t:'out', v:`I notice things a little too hard. always have. patterns,`},
+    {t:'out', v:`tensions, the quiet friction nobody names out loud.`},
+    {t:'out', v:`I write them down. then I keep turning them over until`},
+    {t:'out', v:`they become something worth keeping.`},
+    {t:'blank'},
+    {t:'out', v:`currently based in <span class="mi">Seoul</span>. previously: <span class="mi">Tokyo</span> 🗼 (1.5yr,`},
+    {t:'out', v:`learned Japanese via part-time jobs and mild chaos),`},
+    {t:'out', v:`<span class="mi">Boston</span> 🦞 (made a French friend, nailed croissant pronunciation,`},
+    {t:'out', v:`nothing else in French).`},
+    {t:'blank'},
+    {t:'out', v:`by day: <span class="te">QC Project Lead</span>. by night: <span class="pi">HCI researcher</span>.`},
+    {t:'out', v:`9 papers in progress. 3 languages attempted.`},
+    {t:'out', v:`1 latte art style mastered (rosetta). swans: pending.`},
+    {t:'blank'},
+    {t:'out', v:`I study how accountability gets structured in regulated work —`},
+    {t:'out', v:`how systems shape what explanations survive before`},
+    {t:'out', v:`responsibility settles. it sounds abstract. it's not.`},
+    {t:'out', v:`I've lived inside these systems for years.`},
+    {t:'blank'},
+    {t:'out', v:`Ratatouille is the best film ever made. this is not a debate.`},
+    {t:'blank'},
+    {t:'out', v:`→ research: <a href="https://sorakim-lab.github.io" target="_blank" style="color:var(--blue)">sorakim-lab.github.io</a>`},
+    {t:'out', v:`→ email:    <a href="mailto:sorakim.lab@gmail.com" style="color:var(--blue)">sorakim.lab@gmail.com</a>`},
+    {t:'out', v:`→ ig:       <a href="https://instagram.com/sora.rchive_" target="_blank" style="color:var(--blue)">@sora.rchive_</a>`},
+    {t:'blank'},
+  ],
+
+  'cat diary.txt': ()=>[
+    {t:'blank'},
+    {t:'head', v:'// diary.txt · March 2026'},
+    {t:'out', v:`<span class="ye">Mar 25</span> 🐧✨`},
+    {t:'out', v:`  made a terminal website today. spent approximately`},
+    {t:'out', v:`  forever on the color palette. worth it? absolutely.`},
+    {t:'out', v:`  productive? we don't talk about that.`},
+    {t:'out', v:`  iced americano #3. no regrets. maybe #4 later.`},
+    {t:'blank'},
+    {t:'out', v:`<span class="ye">Mar 20</span> 🎤🎉`},
+    {t:'out', v:`  SUBMITTED. 4S Toronto 2026. PAC paper. panel 74.`},
+    {t:'out', v:`  pressed submit and immediately made a latte to cope.`},
+    {t:'out', v:`  rosetta art. it was good actually. refreshed email`},
+    {t:'out', v:`  approximately 14 times. zero replies yet. normal.`},
+    {t:'blank'},
+    {t:'out', v:`<span class="ye">Mar 18</span> 📌🎉`},
+    {t:'out', v:`  CSCW 2026 poster: submitted!! 2am finish.`},
+    {t:'out', v:`  18/20 participants broadened their reasoning.`},
+    {t:'out', v:`  that number still gets me every time tbh.`},
+    {t:'out', v:`  should've made decaf. didn't. predictable.`},
+    {t:'blank'},
+    {t:'out', v:`<span class="ye">Mar 10</span> 🏛️`},
+    {t:'out', v:`  N=160 violations coded. eyes: slightly broken.`},
+    {t:'out', v:`  but the pattern is RIGHT THERE and i can see it`},
+    {t:'out', v:`  and that's the thing about noticing too hard —`},
+    {t:'out', v:`  <span class="te">once you see it, you can't unsee it.</span>`},
+    {t:'blank'},
+    {t:'out', v:`<span class="dm">// more soon. always noticing. ☕🐧</span>`},
+    {t:'blank'},
+  ],
+
+  'ls writing': ()=>[
+    {t:'blank'},
+    {t:'head', v:'// ~/writing · type cat [filename] to read'},
+    {t:'out', v:`<span class="te">essay</span>   <span class="bl">things_i_cant_unnotice.txt</span>     <span class="dm">Mar 25</span>`},
+    {t:'out', v:`<span class="te">essay</span>   <span class="bl">on_noticing_too_hard.txt</span>       <span class="dm">Mar 22</span>`},
+    {t:'out', v:`<span class="te">essay</span>   <span class="bl">the_barista_years.txt</span>          <span class="dm">Mar 20</span>`},
+    {t:'out', v:`<span class="te">essay</span>   <span class="bl">on_learning_languages_badly.txt</span> <span class="dm">Mar 18</span>`},
+    {t:'out', v:`<span class="pi">journal</span> <span class="bl">notes_instead_of_sleeping.txt</span>  <span class="dm">Mar 12</span>`},
+    {t:'out', v:`<span class="pi">journal</span> <span class="bl">9to6_6to9.txt</span>                  <span class="dm">Mar 08</span>`},
+    {t:'out', v:`<span class="pi">journal</span> <span class="bl">films_that_stayed.txt</span>           <span class="dm">Feb 28</span>`},
+    {t:'blank'},
+  ],
+
+  'cat things_i_cant_unnotice.txt': ()=>[
+    {t:'blank'},
+    {t:'head', v:'// things_i_cant_unnotice.txt'},
+    {t:'out', v:`There's a specific kind of curse where you start seeing`},
+    {t:'out', v:`something, and then you can't stop. Not a hallucination.`},
+    {t:'out', v:`Just — a pattern. A tension. A tiny thing that keeps`},
+    {t:'out', v:`happening and nobody else seems to find weird.`},
+    {t:'blank'},
+    {t:'out', v:`<span class="dm">[ 1,200 words · read more → ]</span> <a href="essay_01.html" style="color:var(--blue)">essay_01.html ↗</a>`},
+    {t:'blank'},
+  ],
+
+  'cat the_barista_years.txt': ()=>[
+    {t:'blank'},
+    {t:'head', v:'// the_barista_years.txt'},
+    {t:'out', v:`I made lattes for three years. I also learned more about`},
+    {t:'out', v:`people in those three years than in any class I've ever taken.`},
+    {t:'blank'},
+    {t:'out', v:`The thing about working at a café is that you become`},
+    {t:'out', v:`completely invisible. Not in a sad way — in a useful way.`},
+    {t:'blank'},
+    {t:'out', v:`<span class="dm">[ 900 words · read more → ]</span> <a href="essay_02.html" style="color:var(--blue)">essay_02.html ↗</a>`},
+    {t:'blank'},
+  ],
+
+  'cat on_noticing_too_hard.txt': ()=>[
+    {t:'blank'},
+    {t:'head', v:'// on_noticing_too_hard.txt'},
+    {t:'out', v:`I have a problem. I notice things. Not like, a superpower`},
+    {t:'out', v:`— more like a mild affliction that makes movies harder`},
+    {t:'out', v:`to watch and group chats exhausting.`},
+    {t:'blank'},
+    {t:'out', v:`<span class="dm">[ 800 words · read more → ]</span> <a href="essay_03.html" style="color:var(--blue)">essay_03.html ↗</a>`},
+    {t:'blank'},
+  ],
+
+  'cat on_learning_languages_badly.txt': ()=>[
+    {t:'blank'},
+    {t:'head', v:'// on_learning_languages_badly.txt'},
+    {t:'out', v:`I'm learning French from a cartoon rat and Spanish from`},
+    {t:'out', v:`a Puerto Rican reggaeton artist. My Duolingo streak is zero.`},
+    {t:'out', v:`I regret nothing.`},
+    {t:'blank'},
+    {t:'out', v:`<span class="dm">[ 750 words · read more → ]</span> <a href="essay_04.html" style="color:var(--blue)">essay_04.html ↗</a>`},
+    {t:'blank'},
+  ],
+
+  'ls papers': ()=>[
+    {t:'blank'},
+    {t:'head', v:'// ~/papers · HCI (5)'},
+    {t:'out', v:`<span class="mi">HCI-01</span>  From Retrieval to Reasoning           <span class="ye">preprint</span>`},
+    {t:'out', v:`<span class="mi">HCI-02</span>  Keeping Alternatives Alive           <span class="ye">CSCW 2026</span>`},
+    {t:'out', v:`<span class="mi">HCI-03</span>  When Documents Don't Connect         <span class="ye">preprint</span>`},
+    {t:'out', v:`<span class="mi">HCI-04</span>  Friction Before Failure              <span class="ye">preprint</span>`},
+    {t:'out', v:`<span class="mi">HCI-05</span>  Regulatory UX Framework             <span class="ye">umbrella</span>`},
+    {t:'blank'},
+    {t:'head', v:'// ~/papers · STS (4)'},
+    {t:'out', v:`<span class="te">STS-01</span>  Anticipated Accountability Conv.     <span class="ye">SSRN</span>`},
+    {t:'out', v:`<span class="te">STS-02</span>  Cognitive Friction in Proc. Texts   <span class="ye">SSRN</span>`},
+    {t:'out', v:`<span class="te">STS-03</span>  Responsibility Convergence          <span class="ye">SSRN</span>`},
+    {t:'out', v:`<span class="te">STS-04</span>  Premature Accountability Conv.      <span class="ye">4S Toronto</span>`},
+    {t:'blank'},
+    {t:'out', v:`→ <span class="bl">sorakim-lab.github.io/papers</span>`},
+    {t:'blank'},
+  ],
+
+  'ls projects': ()=>[
+    {t:'blank'},
+    {t:'head', v:'// ~/projects · Axis 01: Reasoning (2)'},
+    {t:'out', v:`<span class="mi">[R1]</span> Expanding Causal Reasoning under Closure Pressure`},
+    {t:'out', v:`     AI scaffold · N=20 · CSCW 2026`},
+    {t:'out', v:`<span class="mi">[R2]</span> Premature Convergence under Closure Pressure`},
+    {t:'out', v:`     Observational · N=20`},
+    {t:'blank'},
+    {t:'head', v:'// ~/projects · Axis 02: Navigation (4)'},
+    {t:'out', v:`<span class="te">[N1]</span> Procedural Visibility in SOP Navigation · N=20`},
+    {t:'out', v:`<span class="te">[N2]</span> Cross-Reference Visibility and Traceability · N=20`},
+    {t:'out', v:`<span class="te">[N3]</span> Navigation Friction and Loopback Behavior · N=20`},
+    {t:'out', v:`<span class="te">[N4]</span> Review Burden and Workflow Visibility · N=20`},
+    {t:'blank'},
+    {t:'head', v:'// ~/projects · Axis 03: Language (1)'},
+    {t:'out', v:`<span class="pi">[L1]</span> Cognitive Friction in Procedural Documentation · N=500`},
+    {t:'blank'},
+    {t:'head', v:'// ~/corpus'},
+    {t:'out', v:`<span class="ye">[C1]</span> FDA Warning Letters · N=50 · N=160 violations · 2016–2025`},
+    {t:'blank'},
+    {t:'out', v:`→ <span class="bl">sorakim-lab.github.io/projects</span>`},
+    {t:'blank'},
+  ],
+
+  updates: ()=>[
+    {t:'blank'},
+    {t:'head', v:'// UPDATES · March 2026'},
+    {t:'out', v:`<span class="mi">✓</span> 🎉 4S Toronto 2026 — PAC abstract submitted`},
+    {t:'out', v:`     Panel 74: TechnoPower`},
+    {t:'blank'},
+    {t:'out', v:`<span class="mi">✓</span> 🎉 CSCW 2026 — poster submitted`},
+    {t:'out', v:`     Keeping Alternatives Alive`},
+    {t:'blank'},
+    {t:'out', v:`<span class="ye">↻</span> 📝 9 papers v2.0 — SSRN revision under review`},
+    {t:'out', v:`     HCI×5 + STS×4 · full revision complete`},
+    {t:'blank'},
+    {t:'out', v:`<span class="mi">✓</span> 🏛️ FDA Warning Letters corpus complete`},
+    {t:'out', v:`     N=50 · N=160 violations · 2016–2025`},
+    {t:'blank'},
+  ],
+
+  contact: ()=>[
+    {t:'blank'},
+    {t:'head', v:'// CONTACT'},
+    {t:'out', v:`  <span class="te">email</span>     <a href="mailto:sorakim.lab@gmail.com" style="color:var(--blue)">sorakim.lab@gmail.com</a>`},
+    {t:'out', v:`  <span class="te">research</span>  <a href="https://sorakim-lab.github.io" target="_blank" style="color:var(--blue)">sorakim-lab.github.io</a>`},
+    {t:'out', v:`  <span class="te">ig</span>        <a href="https://instagram.com/sora.rchive_" target="_blank" style="color:var(--blue)">@sora.rchive_</a>`},
+    {t:'out', v:`  <span class="te">cv</span>        <a href="assets/sorakim_cv_hci.pdf" target="_blank" style="color:var(--blue)">sorakim_cv_hci.pdf ↗</a>`},
+    {t:'blank'},
+  ],
+
+  'cat cv.pdf': ()=>[
+    {t:'blank'},
+    {t:'out', v:`opening <span class="te">sorakim_cv_hci.pdf</span>...`},
+    {t:'out', v:`<span class="mi">→</span> <a href="assets/sorakim_cv_hci.pdf" target="_blank" style="color:var(--blue)">click here to open ↗</a>`},
+    {t:'blank'},
+  ],
+
+  neofetch: ()=>[
+    {t:'blank'},
+    {t:'out', v:`       <span style="font-size:32px">🐧</span>`},
+    {t:'out', v:``},
+    {t:'out', v:`  <span class="te">sora</span><span class="dm">@</span><span class="mi">seoul</span>`},
+    {t:'out', v:`  <span class="dm">──────────────────</span>`},
+    {t:'out', v:`  <span class="ye">OS</span>        sora-os 2026.03 LTS`},
+    {t:'out', v:`  <span class="ye">kernel</span>    hci-sts-hybrid`},
+    {t:'out', v:`  <span class="ye">shell</span>     sora-sh v∞`},
+    {t:'out', v:`  <span class="ye">field</span>     HCI × STS`},
+    {t:'out', v:`  <span class="ye">papers</span>    9 in progress`},
+    {t:'out', v:`  <span class="ye">uptime</span>    4 years in GMP`},
+    {t:'out', v:`  <span class="ye">latte art</span> yes (certified decent)`},
+    {t:'out', v:`  <span class="ye">film</span>      Ratatouille (top tier)`},
+    {t:'out', v:`  <span class="ye">memory</span>    always noticing`},
+    {t:'blank'},
+    {t:'out', v:`  <span style="background:var(--terra);color:var(--terra)">▓▓▓</span><span style="background:var(--pink);color:var(--pink)">▓▓▓</span><span style="background:var(--yellow);color:var(--yellow)">▓▓▓</span><span style="background:var(--mint);color:var(--mint)">▓▓▓</span><span style="background:var(--blue);color:var(--blue)">▓▓▓</span><span style="background:var(--muted);color:var(--muted)">▓▓▓</span>`},
+    {t:'blank'},
+  ],
+
+  pwd: ()=>[{t:'out',v:'/home/sora/personal-space'},{t:'blank'}],
+
+  history: ()=>{
+    const lines = [{t:'blank'},{t:'head',v:'// command history'}];
+    history_cmds.forEach((c,i)=>{
+      lines.push({t:'out',v:`  <span class="dm">${String(i+1).padStart(3)}</span>  ${c}`});
+    });
+    lines.push({t:'blank'});
+    return lines;
+  },
+
+  fortune: ()=>{
+    const q = [
+      '"the gap between what the procedure says and what the warning letter cites — that\'s the thing."',
+      '"9-to-6: QC. 6-to-9: researcher. strange way to live, but an interesting one."',
+      '"I notice things a little too hard. then I write them down."',
+      '"anyone can cook. anyone can notice. not everyone does."',
+      '"accountability doesn\'t just happen. it gets structured."',
+      '"a latte a day keeps premature convergence away."',
+      '"soft but sharp. always noticing."',
+    ][Math.floor(Math.random()*7)];
+    return [{t:'blank'},{t:'out',v:`<span class="pi">${q}</span>`},{t:'out',v:`<span class="dm">   — sora-fortune, 2026</span>`},{t:'blank'}];
+  },
+
+  'sudo make-coffee': ()=>[
+    {t:'blank'},
+    {t:'out',v:`[sudo] password for sora: <span class="blink">▌</span>`},
+    {t:'out',v:`authenticating...`},
+    {t:'out',v:`<span class="mi">✓</span> access granted (3yr barista credentials verified)`},
+    {t:'blank'},
+    {t:'out',v:`brewing oat milk latte...`},
+    {t:'out',v:`pulling espresso  ████████████ <span class="mi">done</span>`},
+    {t:'out',v:`steaming milk     ████████████ <span class="mi">done</span>`},
+    {t:'out',v:`latte art (rosetta) ██████████ <span class="mi">done</span>`},
+    {t:'blank'},
+    {t:'out',v:`<span class="mi">☕ oat latte ready.</span> decent, as always.`},
+    {t:'blank'},
+  ],
+
+  'ping sorakim-lab.github.io': ()=>[
+    {t:'blank'},
+    {t:'out',v:`PING sorakim-lab.github.io`},
+    {t:'out',v:`64 bytes: seq=0 ttl=64 time=<span class="mi">1.9ms</span>`},
+    {t:'out',v:`64 bytes: seq=1 ttl=64 time=<span class="mi">2.1ms</span>`},
+    {t:'out',v:`64 bytes: seq=2 ttl=64 time=<span class="mi">1.7ms</span>`},
+    {t:'blank'},
+    {t:'out',v:`3 packets · <span class="mi">3 received</span> · 0% loss`},
+    {t:'out',v:`<span class="dm">→ site is alive. papers & projects live there.</span>`},
+    {t:'blank'},
+  ],
+
+  'grep "ratatouille" about.txt': ()=>[
+    {t:'blank'},
+    {t:'out',v:`about.txt: <span class="te">Ratatouille: top tier.</span>`},
+    {t:'out',v:`<span class="dm">1 match — "anyone can cook." — Gusteau, probably Sora too</span>`},
+    {t:'blank'},
+  ],
+
+  clear: ()=>'__clear__',
+};
+
+// ── Tab autocomplete ──
+const allCmds = Object.keys(commands);
+cmd.addEventListener('keydown', e=>{
+  if(e.key==='Tab'){
+    e.preventDefault();
+    const v = cmd.value.toLowerCase();
+    const matches = allCmds.filter(c=>c.startsWith(v));
+    if(matches.length===1) cmd.value = matches[0];
+    else if(matches.length>1){
+      addPromptLine(v);
+      addLine({t:'out', v: matches.map(m=>`<span class="te">${m}</span>`).join('  ')});
+      scrollBottom();
+    }
+    return;
+  }
+  // arrow history
+  if(e.key==='ArrowUp'){
+    e.preventDefault();
+    if(hist_idx<history_cmds.length-1){hist_idx++;cmd.value=history_cmds[history_cmds.length-1-hist_idx];}
+  }
+  if(e.key==='ArrowDown'){
+    e.preventDefault();
+    if(hist_idx>0){hist_idx--;cmd.value=history_cmds[history_cmds.length-1-hist_idx];}
+    else{hist_idx=-1;cmd.value='';}
+  }
+});
+
+// ── Enter ──
+cmd.addEventListener('keydown', async e=>{
+  if(e.key!=='Enter') return;
+  const val = cmd.value.trim().toLowerCase();
+  cmd.value='';
+  hist_idx=-1;
+  if(!val) return;
+  history_cmds.push(val);
+  addPromptLine(val);
+  const fn = commands[val];
+  if(!fn){
+    await printLines([
+      {t:'err', v:`sora-os: command not found: <b>${val}</b>`},
+      {t:'err', v:`try <span class="te">help</span> for available commands`},
+      {t:'blank'},
+    ]);
+  } else {
+    const result = fn();
+    if(result==='__clear__'){out.innerHTML='';}
+    else await printLines(result);
+  }
+});
+
+term.addEventListener('click',()=>cmd.focus());
+cmd.focus();
+</script>
 </body>
 </html>
