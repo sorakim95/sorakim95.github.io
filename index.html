@@ -3,247 +3,794 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>sora@seoul:~</title>
+<title>sora@seoul — desktop</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐧</text></svg>"/>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap');
-:root{
-  --bg:#f5f0e8;--bg2:#ede8dc;--bg3:#e0d9cc;
-  --line:rgba(26,20,40,.10);--text:#1a1428;
-  --muted:#7a6e7e;--dim:#b0a8b8;
-  --terra:#c4593a;--pink:#b8608a;--mint:#4a9e7e;
-  --yellow:#c89a2a;--blue:#4a7ab8;
-  --mono:'Space Mono',monospace;--pixel:'Press Start 2P',monospace;
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;user-select:none;-webkit-user-select:none}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif}
+
+/* ── WALLPAPER ── */
+#wallpaper{position:fixed;inset:0;z-index:0}
+
+/* ── MENU BAR ── */
+#menubar{
+  position:fixed;top:0;left:0;right:0;height:24px;z-index:100;
+  background:rgba(0,0,0,0.35);
+  backdrop-filter:blur(32px) saturate(200%);
+  -webkit-backdrop-filter:blur(32px) saturate(200%);
+  border-bottom:1px solid rgba(255,255,255,0.08);
+  display:flex;align-items:center;padding:0 12px;gap:0;
 }
-*{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;background:var(--bg2)}
-body{
-  font-family:var(--mono);color:var(--text);
-  background-image:radial-gradient(circle,rgba(26,20,40,.07) 1px,transparent 1px);
-  background-size:22px 22px;
+.mb-logo{font-size:14px;padding:0 10px;cursor:pointer;line-height:1}
+.mb-item{font-size:13px;font-weight:400;padding:2px 10px;border-radius:4px;color:rgba(255,255,255,.95);cursor:pointer;letter-spacing:-.02em}
+.mb-item:hover{background:rgba(255,255,255,.15)}
+.mb-item.bold{font-weight:600}
+.mb-right{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(255,255,255,.9);font-weight:400}
+.mb-time{font-size:13px;font-weight:400;letter-spacing:-.02em}
+
+/* ── DESKTOP ICONS ── */
+#desktop{
+  position:fixed;inset:24px 0 80px 0;z-index:10;
+  display:grid;
+  grid-template-columns:repeat(auto-fill,90px);
+  grid-auto-rows:100px;
+  align-content:start;
+  gap:8px;
+  padding:20px;
+  pointer-events:none;
+}
+.icon{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:6px;cursor:pointer;padding:8px 4px;border-radius:10px;
+  pointer-events:all;
+  transition:background .15s;
+  position:relative;
+}
+.icon:hover{background:rgba(255,255,255,.12)}
+.icon.selected{background:rgba(255,255,255,.2)}
+.icon-img{
+  width:60px;height:60px;border-radius:13px;
   display:flex;align-items:center;justify-content:center;
-  min-height:100vh;padding:20px;
+  font-size:32px;
+  box-shadow:0 2px 8px rgba(0,0,0,.35),0 1px 0 rgba(255,255,255,.15) inset;
+  position:relative;overflow:hidden;
+  transition:transform .15s;
 }
-.window{
-  width:100%;max-width:860px;
-  border:2px solid var(--text);border-radius:8px;overflow:hidden;
-  box-shadow:6px 6px 0 var(--text);
-  display:flex;flex-direction:column;max-height:90vh;
+.icon:hover .icon-img{transform:scale(1.05)}
+.icon:active .icon-img{transform:scale(.96)}
+.icon-label{
+  font-size:11px;font-weight:500;color:#fff;
+  text-shadow:0 1px 3px rgba(0,0,0,.8);
+  text-align:center;line-height:1.3;
+  max-width:80px;word-break:break-word;
+  letter-spacing:-.01em;
 }
-.win-bar{
-  background:var(--text);padding:10px 16px;
-  display:flex;align-items:center;gap:10px;flex-shrink:0;
+.icon.selected .icon-label{
+  background:rgba(10,80,200,.75);
+  padding:1px 5px;border-radius:3px;
 }
-.dots{display:flex;gap:6px}
-.dot{width:11px;height:11px;border-radius:50%;cursor:pointer}
-.dot.r{background:#ff5f57}.dot.y{background:#febc2e}.dot.g{background:#28c840}
-.win-title{flex:1;text-align:center;font-family:var(--pixel);font-size:7px;color:rgba(245,240,232,.5);letter-spacing:.05em}
-.term{flex:1;overflow-y:auto;padding:22px 26px;background:var(--bg);cursor:text;min-height:0}
-.term::-webkit-scrollbar{width:5px}
-.term::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:3px}
-.line{margin-bottom:2px;line-height:1.75;font-size:13px;white-space:pre-wrap;word-break:break-word}
-.line.prompt-line{display:flex;align-items:flex-start;gap:8px}
-.ps1{color:var(--terra);font-family:var(--pixel);font-size:7px;white-space:nowrap;padding-top:3px}
-.ps1 .sym{color:var(--mint)}
-.line.out{color:var(--muted);padding-left:2px}
-.line.err{color:var(--terra)}
-.line.head{color:var(--text);font-family:var(--pixel);font-size:7px;letter-spacing:.06em;margin:10px 0 5px;border-bottom:1px solid var(--line);padding-bottom:5px}
-.line.blank{min-height:10px}
-.line b{color:var(--text);font-weight:700}
-.te{color:var(--terra)}.mi{color:var(--mint)}.pi{color:var(--pink)}.bl{color:var(--blue)}.ye{color:var(--yellow)}.dm{color:var(--dim)}
+
+/* icon backgrounds — flat apple style */
+.ico-terminal{background:linear-gradient(160deg,#2a2040,#0d0820)}
+.ico-folder{background:linear-gradient(160deg,#5db8f5,#1a8fd1)}
+.ico-papers{background:linear-gradient(160deg,#ff6b6b,#cc2a2a)}
+.ico-diary{background:linear-gradient(160deg,#f5a0c8,#c44080)}
+.ico-mail{background:linear-gradient(160deg,#60b8f5,#1060c8)}
+.ico-ig{background:linear-gradient(160deg,#f08040,#c02080)}
+.ico-research{background:linear-gradient(160deg,#f5c840,#d08000)}
+
+/* subtle gloss */
+.icon-img::after{
+  content:'';position:absolute;top:0;left:0;right:0;height:45%;
+  background:linear-gradient(180deg,rgba(255,255,255,.18),transparent);
+  border-radius:13px 13px 0 0;pointer-events:none;
+}
+
+/* ── TERMINAL WINDOW ── */
+#term-window{
+  position:fixed;
+  top:50px;left:50%;transform:translateX(-50%);
+  width:min(860px,95vw);
+  max-height:80vh;
+  z-index:200;
+  display:none;flex-direction:column;
+  border-radius:12px;overflow:hidden;
+  box-shadow:0 32px 80px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.1);
+}
+#term-window.open{display:flex}
+
+.tw-bar{
+  background:#2d2640;
+  padding:10px 16px;
+  display:flex;align-items:center;gap:10px;
+  flex-shrink:0;cursor:grab;
+}
+.tw-bar:active{cursor:grabbing}
+.tw-dots{display:flex;gap:6px}
+.tw-dot{width:12px;height:12px;border-radius:50%;cursor:pointer;transition:filter .15s}
+.tw-dot:hover{filter:brightness(1.2)}
+.tw-dot.r{background:#ff5f57}.tw-dot.y{background:#febc2e}.tw-dot.g{background:#28c840}
+.tw-title{flex:1;text-align:center;font-family:'Space Mono',monospace;font-size:11px;color:rgba(255,255,255,.4);letter-spacing:.04em}
+
+.tw-term{
+  flex:1;overflow-y:auto;padding:18px 22px;
+  background:#f5f0e8;
+  background-image:radial-gradient(circle,rgba(26,20,40,.06) 1px,transparent 1px);
+  background-size:20px 20px;
+  min-height:300px;
+  cursor:text;
+}
+.tw-term::-webkit-scrollbar{width:5px}
+.tw-term::-webkit-scrollbar-thumb{background:#e0d9cc;border-radius:3px}
+
+.tline{margin-bottom:2px;line-height:1.75;font-size:12px;font-family:'Space Mono',monospace;white-space:pre-wrap;word-break:break-word}
+.tline.out{color:#7a6e7e}
+.tline.err{color:#c4593a}
+.tline.head{color:#1a1428;font-family:'Press Start 2P',monospace;font-size:6px;letter-spacing:.06em;margin:10px 0 5px;border-bottom:1px solid rgba(26,20,40,.1);padding-bottom:5px}
+.tline.blank{min-height:10px}
+.tline.prompt-line{display:flex;align-items:flex-start;gap:8px}
+.tline b{color:#1a1428;font-weight:700}
+.tps1{color:#c4593a;font-family:'Press Start 2P',monospace;font-size:6px;white-space:nowrap;padding-top:3px}
+.tps1 .sym{color:#4a9e7e}
+.te{color:#c4593a}.mi{color:#4a9e7e}.pi{color:#b8608a}.bl{color:#4a7ab8}.ye{color:#c89a2a}.dm{color:#b0a8b8}
+
 @keyframes fadeIn{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:none}}
-.line.typed{animation:fadeIn .12s ease forwards}
-.input-row{
+.tline.typed{animation:fadeIn .1s ease forwards}
+
+.tw-input{
   display:flex;align-items:center;gap:8px;
-  padding:12px 26px;border-top:1px solid var(--line);
-  background:var(--bg2);flex-shrink:0;
+  padding:10px 22px;border-top:1px solid rgba(26,20,40,.08);
+  background:#ede8dc;flex-shrink:0;
 }
-.input-ps1{color:var(--terra);font-family:var(--pixel);font-size:7px;white-space:nowrap}
-.input-ps1 .sym{color:var(--mint)}
-#cmd{flex:1;background:transparent;border:none;outline:none;font-family:var(--mono);font-size:13px;color:var(--text);caret-color:var(--terra)}
-#cmd::placeholder{color:var(--dim);font-size:12px}
-body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:999;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(26,20,40,.015) 2px,rgba(26,20,40,.015) 4px)}
-.blink{animation:blink 1s step-end infinite;color:var(--terra)}
+.tw-ps1{color:#c4593a;font-family:'Press Start 2P',monospace;font-size:6px;white-space:nowrap}
+.tw-ps1 .sym{color:#4a9e7e}
+#tcmd{flex:1;background:transparent;border:none;outline:none;font-family:'Space Mono',monospace;font-size:12px;color:#1a1428;caret-color:#c4593a}
+#tcmd::placeholder{color:#b0a8b8;font-size:11px}
+
+.blink{animation:blink 1s step-end infinite;color:#c4593a}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
-@media(max-width:600px){
-  body{padding:0;align-items:flex-start}
-  .window{max-height:100vh;border-radius:0;border:none;box-shadow:none}
-  .term{padding:14px 14px}
-  .input-row{padding:10px 14px}
-  .line{font-size:12px}
-  #cmd{font-size:12px}
+
+/* ── DOCK ── */
+#dock{
+  position:fixed;bottom:6px;left:50%;transform:translateX(-50%);
+  z-index:100;
+  display:flex;align-items:flex-end;gap:6px;
+  padding:6px 14px 8px;
+  background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.18);
+  border-radius:18px;
+  backdrop-filter:blur(40px) saturate(200%);
+  -webkit-backdrop-filter:blur(40px) saturate(200%);
+  box-shadow:0 4px 24px rgba(0,0,0,.3),0 -1px 0 rgba(255,255,255,.2) inset,inset 0 1px 0 rgba(255,255,255,.15);
+}
+.dock-ico{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  cursor:pointer;position:relative;
+}
+.dock-img{
+  width:44px;height:44px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:24px;
+  box-shadow:0 2px 6px rgba(0,0,0,.25);
+  transition:transform .15s cubic-bezier(.2,.8,.2,1);
+}
+.dock-ico:hover .dock-img{transform:scale(1.3) translateY(-6px)}
+.dock-label{
+  font-size:9px;color:#fff;font-weight:500;
+  text-shadow:0 1px 3px rgba(0,0,0,.8);
+  opacity:0;transition:opacity .15s;white-space:nowrap;
+  position:absolute;bottom:calc(100% + 8px);
+  background:rgba(30,30,30,.85);backdrop-filter:blur(8px);
+  padding:3px 8px;border-radius:6px;pointer-events:none;
+  letter-spacing:-.01em;
+}
+.dock-ico:hover .dock-label{opacity:1}
+.dock-dot{width:3px;height:3px;border-radius:50%;background:rgba(255,255,255,.7);opacity:0;margin-top:1px}
+.dock-dot.open{opacity:1}
+.dock-sep{width:1px;height:32px;background:rgba(255,255,255,.2);margin:0 3px;align-self:center}
+
+/* selected icon overlay */
+.icon.selected::after{
+  content:'';position:absolute;inset:0;
+  border:2px solid rgba(255,255,255,.5);
+  border-radius:10px;pointer-events:none;
+}
+
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:1;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.012) 2px,rgba(0,0,0,.012) 4px);
 }
 </style>
 </head>
 <body>
-<div class="window">
-  <div class="win-bar">
-    <div class="dots">
-      <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
-    </div>
-    <div class="win-title">🐧 sora@seoul: ~/home</div>
-  </div>
-  <div class="term" id="term">
-    <div id="output"></div>
-  </div>
-  <div class="input-row">
-    <span class="input-ps1">sora@seoul ~<span class="sym"> $</span></span>
-    <input id="cmd" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="type 'help' →"/>
+
+<!-- WALLPAPER -->
+<canvas id="wallpaper"></canvas>
+
+<!-- MENU BAR -->
+<div id="menubar">
+  <span class="mb-logo">🐧</span>
+  <span class="mb-item bold">Sora</span>
+  <span class="mb-item">File</span>
+  <span class="mb-item">Edit</span>
+  <span class="mb-item">View</span>
+  <span class="mb-item">Go</span>
+  <span class="mb-item">Window</span>
+  <div class="mb-right">
+    <span>📶</span><span>🔋</span>
+    <span class="mb-time" id="clock">9:41 AM</span>
   </div>
 </div>
+
+<!-- DESKTOP ICONS -->
+<div id="desktop">
+  <div class="icon" data-action="terminal" ondblclick="openTerminal()">
+    <div class="icon-img ico-terminal">🐧</div>
+    <div class="icon-label">sora@seoul</div>
+  </div>
+  <div class="icon" data-action="projects" ondblclick="window.open('https://sorakim-lab.github.io/projects','_blank')">
+    <div class="icon-img ico-folder">🗂</div>
+    <div class="icon-label">projects</div>
+  </div>
+  <div class="icon" data-action="papers" ondblclick="window.open('https://sorakim-lab.github.io/papers','_blank')">
+    <div class="icon-img ico-papers">📄</div>
+    <div class="icon-label">papers</div>
+  </div>
+  <div class="icon" data-action="diary" ondblclick="openTerminal('cat diary.txt')">
+    <div class="icon-img ico-diary">📔</div>
+    <div class="icon-label">diary.txt</div>
+  </div>
+  <div class="icon" data-action="mail" ondblclick="openTerminal('contact')">
+    <div class="icon-img ico-mail">✉️</div>
+    <div class="icon-label">mail</div>
+  </div>
+  <div class="icon" data-action="research" ondblclick="window.open('https://sorakim-lab.github.io','_blank')">
+    <div class="icon-img ico-research">🔬</div>
+    <div class="icon-label">research</div>
+  </div>
+</div>
+
+<!-- TERMINAL WINDOW -->
+<div id="term-window">
+  <div class="tw-bar" id="tw-bar">
+    <div class="tw-dots">
+      <div class="tw-dot r" onclick="closeTerminal()"></div>
+      <div class="tw-dot y" onclick="minTerminal()"></div>
+      <div class="tw-dot g" onclick="maxTerminal()"></div>
+    </div>
+    <div class="tw-title">🐧 sora@seoul: ~/home</div>
+  </div>
+  <div class="tw-term" id="tw-term" onclick="document.getElementById('tcmd').focus()">
+    <div id="tw-out"></div>
+  </div>
+  <div class="tw-input">
+    <span class="tw-ps1">sora@seoul ~<span class="sym"> $</span></span>
+    <input id="tcmd" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="type 'help' →"/>
+  </div>
+</div>
+
+<!-- DOCK -->
+<div id="dock">
+  <div class="dock-ico" ondblclick="openTerminal()">
+    <div class="dock-img ico-terminal">🐧</div>
+    <div class="dock-label">Terminal</div>
+    <div class="dock-dot open"></div>
+  </div>
+  <div class="dock-ico" ondblclick="window.open('https://sorakim-lab.github.io/projects','_blank')">
+    <div class="dock-img ico-folder">🗂</div>
+    <div class="dock-label">Projects</div>
+    <div class="dock-dot"></div>
+  </div>
+  <div class="dock-ico" ondblclick="window.open('https://sorakim-lab.github.io/papers','_blank')">
+    <div class="dock-img ico-papers">📄</div>
+    <div class="dock-label">Papers</div>
+    <div class="dock-dot"></div>
+  </div>
+  <div class="dock-sep"></div>
+  <div class="dock-ico" ondblclick="window.open('mailto:sorakim.lab@gmail.com')">
+    <div class="dock-img ico-mail">✉️</div>
+    <div class="dock-label">Mail</div>
+    <div class="dock-dot"></div>
+  </div>
+  <div class="dock-ico" ondblclick="window.open('https://instagram.com/sora.rchive_','_blank')">
+    <div class="dock-img ico-ig">📷</div>
+    <div class="dock-label">Instagram</div>
+    <div class="dock-dot"></div>
+  </div>
+</div>
+
 <script>
-const out = document.getElementById('output');
-const cmd = document.getElementById('cmd');
-const term = document.getElementById('term');
-const history_cmds = [];
-let hist_idx = -1;
+/* ── BIG SUR WALLPAPER ── */
+const cv = document.getElementById('wallpaper');
+const cx = cv.getContext('2d');
+function resize(){cv.width=window.innerWidth;cv.height=window.innerHeight;drawWall()}
+function drawWall(){
+  const W=cv.width,H=cv.height;
+  const sky=cx.createLinearGradient(0,0,W*.8,H);
+  sky.addColorStop(0,'#050818');sky.addColorStop(.25,'#0d1240');
+  sky.addColorStop(.5,'#1a0a50');sky.addColorStop(.7,'#2d0860');
+  sky.addColorStop(.85,'#3d1040');sky.addColorStop(1,'#0a0818');
+  cx.fillStyle=sky;cx.fillRect(0,0,W,H);
+  // aurora
+  const a1=cx.createRadialGradient(W*.4,H*.2,0,W*.4,H*.2,W*.6);
+  a1.addColorStop(0,'rgba(60,180,220,.35)');a1.addColorStop(.5,'rgba(120,60,200,.2)');a1.addColorStop(1,'transparent');
+  cx.fillStyle=a1;cx.fillRect(0,0,W,H);
+  const a2=cx.createRadialGradient(W*.7,H*.35,0,W*.7,H*.35,W*.4);
+  a2.addColorStop(0,'rgba(200,80,180,.25)');a2.addColorStop(1,'transparent');
+  cx.fillStyle=a2;cx.fillRect(0,0,W,H);
+  const a3=cx.createRadialGradient(W*.15,H*.4,0,W*.15,H*.4,W*.35);
+  a3.addColorStop(0,'rgba(40,200,160,.2)');a3.addColorStop(1,'transparent');
+  cx.fillStyle=a3;cx.fillRect(0,0,W,H);
+  // mountains
+  drawMountain(W,H,[{x:0,y:.58},{x:.08,y:.44},{x:.2,y:.50},{x:.32,y:.40},{x:.46,y:.48},{x:.6,y:.38},{x:.74,y:.46},{x:.88,y:.52},{x:1,y:.56},{x:1,y:1},{x:0,y:1}],'rgba(5,3,18,.95)');
+  drawMountain(W,H,[{x:0,y:.70},{x:.15,y:.60},{x:.3,y:.64},{x:.48,y:.58},{x:.64,y:.62},{x:.8,y:.66},{x:1,y:.70},{x:1,y:1},{x:0,y:1}],'rgba(3,1,12,.98)');
+  drawMountain(W,H,[{x:0,y:.80},{x:.3,y:.72},{x:.6,y:.76},{x:.9,y:.72},{x:1,y:.78},{x:1,y:1},{x:0,y:1}],'rgba(2,1,8,1)');
+  // stars
+  for(let i=0;i<150;i++){
+    const x=Math.random()*W,y=Math.random()*H*.6,r=Math.random()*.8+.1;
+    cx.fillStyle=`rgba(255,255,255,${Math.random()*.8+.2})`;
+    cx.beginPath();cx.arc(x,y,r,0,Math.PI*2);cx.fill();
+  }
+}
+function drawMountain(W,H,pts,color){
+  cx.beginPath();
+  pts.forEach((p,i)=>{i===0?cx.moveTo(p.x*W,p.y*H):cx.lineTo(p.x*W,p.y*H)});
+  cx.closePath();cx.fillStyle=color;cx.fill();
+}
+resize();window.addEventListener('resize',resize);
 
-function scrollBottom(){term.scrollTop = term.scrollHeight}
+/* ── CLOCK ── */
+function updateClock(){
+  const d=new Date(),h=d.getHours()%12||12,m=String(d.getMinutes()).padStart(2,'0'),a=d.getHours()>=12?'PM':'AM';
+  document.getElementById('clock').textContent=`${h}:${m} ${a}`;
+}
+updateClock();setInterval(updateClock,10000);
 
-function addLine(cfg, delay=0){
+/* ── ICON SELECTION ── */
+document.querySelectorAll('.icon').forEach(ico=>{
+  ico.addEventListener('click',e=>{
+    document.querySelectorAll('.icon').forEach(i=>i.classList.remove('selected'));
+    ico.classList.add('selected');e.stopPropagation();
+  });
+});
+document.getElementById('desktop').addEventListener('click',()=>{
+  document.querySelectorAll('.icon').forEach(i=>i.classList.remove('selected'));
+});
+
+/* ── TERMINAL ── */
+const tw = document.getElementById('term-window');
+const tout = document.getElementById('tw-out');
+const tcmd = document.getElementById('tcmd');
+const tterm = document.getElementById('tw-term');
+let termBooted = false;
+let twMax = false;
+let twPrev = {};
+const history_cmds=[];let hist_idx=-1;
+
+function scrollB(){tterm.scrollTop=tterm.scrollHeight}
+
+function addLine(cfg,delay=0){
   return new Promise(res=>{
     setTimeout(()=>{
-      const div = document.createElement('div');
-      div.className = 'line typed ' + (cfg.t==='blank'?'blank':cfg.t==='head'?'head':cfg.t==='err'?'err':'out');
-      div.innerHTML = cfg.v || '';
-      out.appendChild(div);
-      scrollBottom();
-      res();
-    }, delay);
+      const d=document.createElement('div');
+      d.className='tline typed '+(cfg.t==='blank'?'blank':cfg.t==='head'?'head':cfg.t==='err'?'err':'out');
+      d.innerHTML=cfg.v||'';
+      tout.appendChild(d);scrollB();res();
+    },delay);
   });
 }
-
-function addPromptLine(text){
-  const div = document.createElement('div');
-  div.className = 'line prompt-line';
-  div.innerHTML = `<span class="ps1">sora@seoul ~<span class="sym"> $</span></span> <span style="font-size:13px">${text}</span>`;
-  out.appendChild(div);
+function addPrompt(text){
+  const d=document.createElement('div');
+  d.className='tline prompt-line';
+  d.innerHTML=`<span class="tps1">sora@seoul ~<span class="sym"> $</span></span> <span style="font-size:12px">${text}</span>`;
+  tout.appendChild(d);
 }
-
 async function printLines(lines){
-  for(let i=0;i<lines.length;i++){
-    await addLine(lines[i], i*38);
-  }
+  for(let i=0;i<lines.length;i++) await addLine(lines[i],i*35);
 }
 
 async function boot(){
-  const bootLines = [
-    {t:'out', v:`<span style="font-family:var(--pixel);font-size:7px;line-height:2.2;color:var(--terra)">  ██████╗  ██████╗ ██████╗  █████╗ </span>`},
-    {t:'out', v:`<span style="font-family:var(--pixel);font-size:7px;line-height:2.2;color:var(--pink)">  ██╔════╝ ██╔═══██╗██╔══██╗██╔══██╗</span>`},
-    {t:'out', v:`<span style="font-family:var(--pixel);font-size:7px;line-height:2.2;color:var(--yellow)">  ╚█████╗  ██║   ██║██████╔╝███████║</span>`},
-    {t:'out', v:`<span style="font-family:var(--pixel);font-size:7px;line-height:2.2;color:var(--mint)">   ╚═══██╗ ██║   ██║██╔══██╗██╔══██║</span>`},
-    {t:'out', v:`<span style="font-family:var(--pixel);font-size:7px;line-height:2.2;color:var(--blue)">  ██████╔╝ ╚██████╔╝██║  ██║██║  ██║</span>`},
-    {t:'out', v:`<span style="font-family:var(--pixel);font-size:7px;line-height:2.2;color:var(--dim)">  ╚═════╝   ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝</span>`},
+  const b=[
+    {t:'out',v:`<span style="font-family:'Press Start 2P',monospace;font-size:6px;line-height:2.2;color:#c4593a">  ██████╗  ██████╗ ██████╗  █████╗ </span>`},
+    {t:'out',v:`<span style="font-family:'Press Start 2P',monospace;font-size:6px;line-height:2.2;color:#b8608a">  ██╔════╝ ██╔═══██╗██╔══██╗██╔══██╗</span>`},
+    {t:'out',v:`<span style="font-family:'Press Start 2P',monospace;font-size:6px;line-height:2.2;color:#c89a2a">  ╚█████╗  ██║   ██║██████╔╝███████║</span>`},
+    {t:'out',v:`<span style="font-family:'Press Start 2P',monospace;font-size:6px;line-height:2.2;color:#4a9e7e">   ╚═══██╗ ██║   ██║██╔══██╗██╔══██║</span>`},
+    {t:'out',v:`<span style="font-family:'Press Start 2P',monospace;font-size:6px;line-height:2.2;color:#4a7ab8">  ██████╔╝ ╚██████╔╝██║  ██║██║  ██║</span>`},
+    {t:'out',v:`<span style="font-family:'Press Start 2P',monospace;font-size:6px;line-height:2.2;color:#b0a8b8">  ╚═════╝   ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝</span>`},
     {t:'blank'},
-    {t:'out', v:`<span class="mi">sora-os</span> <span class="ye">2026.03</span> LTS — powered by 🐧 curiosity`},
-    {t:'out', v:`kernel: <span class="te">hci-sts-hybrid</span> · shell: <span class="pi">sora-sh</span> · locale: Seoul/KR`},
+    {t:'out',v:`<span class="mi">sora-os</span> <span class="ye">2026.03</span> LTS — powered by 🐧 curiosity`},
+    {t:'out',v:`kernel: <span class="te">hci-sts-hybrid</span> · shell: <span class="pi">sora-sh</span> · locale: Seoul/KR`},
     {t:'blank'},
-    {t:'out', v:`Loading <span class="te">accountability.ko</span>... <span class="mi">OK</span>`},
-    {t:'out', v:`Loading <span class="te">latte-art.ko</span>...     <span class="mi">OK</span>`},
-    {t:'out', v:`Loading <span class="te">ratatouille.ko</span>...   <span class="mi">OK</span>`},
+    {t:'out',v:`Loading <span class="te">accountability.ko</span>... <span class="mi">OK</span>`},
+    {t:'out',v:`Loading <span class="te">latte-art.ko</span>...     <span class="mi">OK</span>`},
+    {t:'out',v:`Loading <span class="te">ratatouille.ko</span>...   <span class="mi">OK</span>`},
     {t:'blank'},
-    {t:'out', v:`<span class="pi">Welcome, visitor.</span> Type <span class="te">help</span> to see what's here.`},
-    {t:'out', v:`<span class="dm">tip: try whoami · ls writing · cat diary.txt</span>`},
+    {t:'out',v:`<span class="pi">Welcome, visitor.</span> Type <span class="te">help</span> to see what's here.`},
+    {t:'out',v:`<span class="dm">tip: try whoami · ls writing · cat diary.txt</span>`},
     {t:'blank'},
-    {t:'out', v:`<span class="dm">or just run</span> <span class="te">./enter</span> <span class="blink">▌</span>`},
+    {t:'out',v:`<span class="dm">or just run</span> <span class="te">./enter</span> <span class="blink">▌</span>`},
     {t:'blank'},
   ];
-  for(let i=0;i<bootLines.length;i++){
-    await addLine(bootLines[i], i*55);
+  for(let i=0;i<b.length;i++) await addLine(b[i],i*50);
+}
+
+function openTerminal(autoCmd){
+  tw.classList.add('open');
+  document.querySelector('.dock-dot').classList.add('open');
+  if(!termBooted){termBooted=true;boot().then(()=>{if(autoCmd)runCmd(autoCmd)});}
+  else if(autoCmd){runCmd(autoCmd);}
+  tcmd.focus();
+}
+function closeTerminal(){tw.classList.remove('open')}
+function minTerminal(){tw.classList.remove('open')}
+function maxTerminal(){
+  if(twMax){
+    Object.assign(tw.style,twPrev);twMax=false;
+  } else {
+    twPrev={top:tw.style.top,left:tw.style.left,width:tw.style.width,height:tw.style.height,transform:tw.style.transform};
+    Object.assign(tw.style,{top:'24px',left:'0',width:'100vw',height:'calc(100vh - 104px)',transform:'none'});
+    twMax=true;
   }
 }
-boot();
 
+/* drag */
+const bar=document.getElementById('tw-bar');
+let drag=false,ox=0,oy=0;
+bar.addEventListener('mousedown',e=>{
+  if(e.target.classList.contains('tw-dot'))return;
+  drag=true;
+  const r=tw.getBoundingClientRect();
+  ox=e.clientX-r.left;oy=e.clientY-r.top;
+  tw.style.transform='none';
+  e.preventDefault();
+});
+document.addEventListener('mousemove',e=>{
+  if(!drag||twMax)return;
+  tw.style.left=(e.clientX-ox)+'px';
+  tw.style.top=Math.max(24,e.clientY-oy)+'px';
+});
+document.addEventListener('mouseup',()=>{drag=false});
+
+/* commands */
 const commands = {
-  './enter': ()=>[
+  './enter':()=>[
     {t:'blank'},
-    {t:'out', v:`running <span class="te">./enter</span>...`},
-    {t:'out', v:`<span class="mi">✓</span> access granted`},
+    {t:'out',v:`running <span class="te">./enter</span>...`},
+    {t:'out',v:`<span class="mi">✓</span> access granted`},
     {t:'blank'},
-    {t:'out', v:`hi. glad you came in. 🐧`},
-    {t:'out', v:`<span class="dm">start anywhere. try <span class="te">whoami</span> or <span class="te">ls writing</span> or <span class="te">fortune</span>.</span>`},
-    {t:'blank'},
-  ],
-    {t:'head', v:'// AVAILABLE COMMANDS'},
-    {t:'out', v:`  <span class="te">whoami</span>                       — who is sora?`},
-    {t:'out', v:`  <span class="te">cat about.txt</span>                — more about me`},
-    {t:'out', v:`  <span class="te">cat diary.txt</span>                — recent diary entries`},
-    {t:'out', v:`  <span class="te">ls writing</span>                   — essays & journal`},
-    {t:'out', v:`  <span class="te">cat filename</span>                 — read an essay (e.g. cat the_barista_years.txt)`},
-    {t:'out', v:`  <span class="te">ls papers</span>                    — HCI + STS papers`},
-    {t:'out', v:`  <span class="te">ls projects</span>                  — research projects`},
-    {t:'out', v:`  <span class="te">updates</span>                      — latest news`},
-    {t:'out', v:`  <span class="te">contact</span>                      — get in touch + CV`},
-    {t:'out', v:`  <span class="pi">neofetch</span>                     — system info`},
-    {t:'out', v:`  <span class="pi">pwd</span>                          — current directory`},
-    {t:'out', v:`  <span class="pi">history</span>                      — command history`},
-    {t:'out', v:`  <span class="pi">fortune</span>                      — random sora quote`},
-    {t:'out', v:`  <span class="mi">sudo make-coffee</span>             — ☕`},
-    {t:'out', v:`  <span class="mi">ping sorakim-lab.github.io</span>   — ping research site`},
-    {t:'out', v:`  <span class="mi">grep "ratatouille" about.txt</span> — 🐀`},
-    {t:'out', v:`  <span class="dm">clear</span>                        — clear terminal`},
-    {t:'blank'},
-    {t:'out', v:`  <b>tip:</b> <span class="te">Tab</span> autocomplete · <span class="te">↑↓</span> command history`},
+    {t:'out',v:`hi. glad you came in. 🐧`},
+    {t:'out',v:`<span class="dm">start anywhere. try <span class="te">whoami</span> or <span class="te">ls writing</span> or <span class="te">fortune</span>.</span>`},
     {t:'blank'},
   ],
+  help:()=>[
+    {t:'head',v:'// AVAILABLE COMMANDS'},
+    {t:'out',v:`  <span class="te">whoami</span>                       — who is sora?`},
+    {t:'out',v:`  <span class="te">cat about.txt</span>                — more about me`},
+    {t:'out',v:`  <span class="te">cat diary.txt</span>                — recent diary entries`},
+    {t:'out',v:`  <span class="te">ls writing</span>                   — essays & journal`},
+    {t:'out',v:`  <span class="te">cat filename</span>                 — read an essay`},
+    {t:'out',v:`  <span class="te">ls papers</span>                    — HCI + STS papers`},
+    {t:'out',v:`  <span class="te">ls projects</span>                  — research projects`},
+    {t:'out',v:`  <span class="te">updates</span>                      — latest news`},
+    {t:'out',v:`  <span class="te">contact</span>                      — get in touch + CV`},
+    {t:'out',v:`  <span class="pi">neofetch</span>                     — system info`},
+    {t:'out',v:`  <span class="pi">fortune</span>                      — random sora quote`},
+    {t:'out',v:`  <span class="mi">sudo make-coffee</span>             — ☕`},
+    {t:'out',v:`  <span class="mi">ping sorakim-lab.github.io</span>   — ping research site`},
+    {t:'out',v:`  <span class="mi">grep "ratatouille" about.txt</span> — 🐀`},
+    {t:'out',v:`  <span class="dm">clear</span>                        — clear terminal`},
+    {t:'blank'},
+    {t:'out',v:`  <b>tip:</b> <span class="te">Tab</span> autocomplete · <span class="te">↑↓</span> command history`},
+    {t:'blank'},
+  ],
+  whoami:()=>[
+    {t:'blank'},
+    {t:'out',v:`<span class="te">Sora Kim</span> · QC Project Lead & HCI Researcher`},
+    {t:'blank'},
+    {t:'out',v:`  <span class="mi">location</span>  Seoul, South Korea 🌱`},
+    {t:'out',v:`  <span class="mi">prev</span>      Tokyo 🗼 · Boston 🦞`},
+    {t:'out',v:`  <span class="mi">field</span>     HCI × STS · pharmaceutical GMP`},
+    {t:'out',v:`  <span class="mi">papers</span>    9 in progress (v2.0 under SSRN review)`},
+    {t:'out',v:`  <span class="mi">schedule</span>  9-to-6: QC. 6-to-9: research.`},
+    {t:'out',v:`  <span class="mi">vibe</span>      soft but sharp · always noticing`},
+    {t:'out',v:`  <span class="mi">latte art</span> yes (3yr barista · rosetta certified)`},
+    {t:'out',v:`  <span class="mi">japanese</span>  fluent enough to argue — Tokyo 1.5yr 🗼`},
+    {t:'out',v:`  <span class="mi">french</span>    croissant, baguette & ratatouille only 🥐🐀`},
+    {t:'out',v:`  <span class="mi">spanish</span>   bad bunny method 📻`},
+    {t:'out',v:`  <span class="mi">film</span>      Ratatouille 🐀 (top tier, non-negotiable)`},
+    {t:'blank'},
+  ],
+  'cat about.txt':()=>[
+    {t:'blank'},
+    {t:'head',v:'// about.txt'},
+    {t:'out',v:`okay so. hi. I'm <span class="te">Sora</span>.`},
+    {t:'blank'},
+    {t:'out',v:`I notice things a little too hard. always have. patterns,`},
+    {t:'out',v:`tensions, the quiet friction nobody names out loud.`},
+    {t:'out',v:`I write them down. then I keep turning them over until`},
+    {t:'out',v:`they become something worth keeping.`},
+    {t:'blank'},
+    {t:'out',v:`currently based in <span class="mi">Seoul</span>. previously: <span class="mi">Tokyo</span> 🗼 (1.5yr,`},
+    {t:'out',v:`learned Japanese via part-time jobs and mild chaos),`},
+    {t:'out',v:`<span class="mi">Boston</span> 🦞 (made a French friend who certified exactly`},
+    {t:'out',v:`3 words: croissant, baguette, ratatouille. nothing else).`},
+    {t:'blank'},
+    {t:'out',v:`by day: <span class="te">QC Project Lead</span>. by night: <span class="pi">HCI researcher</span>.`},
+    {t:'out',v:`9 papers in progress. 3 languages attempted.`},
+    {t:'out',v:`1 latte art style mastered (rosetta). swans: pending.`},
+    {t:'blank'},
+    {t:'out',v:`Ratatouille is the best film ever made. this is not a debate.`},
+    {t:'blank'},
+    {t:'out',v:`→ research: <a href="https://sorakim-lab.github.io" target="_blank" style="color:#4a7ab8">sorakim-lab.github.io</a>`},
+    {t:'out',v:`→ email:    <a href="mailto:sorakim.lab@gmail.com" style="color:#4a7ab8">sorakim.lab@gmail.com</a>`},
+    {t:'out',v:`→ ig:       <a href="https://instagram.com/sora.rchive_" target="_blank" style="color:#4a7ab8">@sora.rchive_</a>`},
+    {t:'blank'},
+  ],
+  'cat diary.txt':()=>[
+    {t:'blank'},
+    {t:'head',v:'// diary.txt · March 2026'},
+    {t:'out',v:`<span class="ye">Mar 25</span> 🐧✨`},
+    {t:'out',v:`  made a terminal website today. spent approximately`},
+    {t:'out',v:`  forever on the color palette. worth it? absolutely.`},
+    {t:'out',v:`  productive? we don't talk about that.`},
+    {t:'out',v:`  iced americano #3. no regrets. maybe #4 later.`},
+    {t:'blank'},
+    {t:'out',v:`<span class="ye">Mar 20</span> 🎤🎉`},
+    {t:'out',v:`  SUBMITTED. 4S Toronto 2026. PAC paper. panel 74.`},
+    {t:'out',v:`  pressed submit and immediately made a latte to cope.`},
+    {t:'out',v:`  rosetta art. refreshed email approximately 14 times.`},
+    {t:'blank'},
+    {t:'out',v:`<span class="ye">Mar 18</span> 📌🎉`},
+    {t:'out',v:`  CSCW 2026 poster: submitted!! 2am finish.`},
+    {t:'out',v:`  18/20 participants broadened their reasoning.`},
+    {t:'out',v:`  that number still gets me every time tbh.`},
+    {t:'blank'},
+    {t:'out',v:`<span class="ye">Mar 10</span> 🏛️`},
+    {t:'out',v:`  N=160 violations coded. eyes: slightly broken.`},
+    {t:'out',v:`  <span class="te">once you see it, you can't unsee it.</span>`},
+    {t:'blank'},
+    {t:'out',v:`<span class="dm">// more soon. always noticing. ☕🐧</span>`},
+    {t:'blank'},
+  ],
+  'ls writing':()=>[
+    {t:'blank'},
+    {t:'head',v:'// ~/writing · cat filename to read (no brackets!)'},
+    {t:'out',v:`<span class="te">essay</span>   <span class="bl">things_i_cant_unnotice.txt</span>      <span class="dm">Mar 25</span>`},
+    {t:'out',v:`<span class="te">essay</span>   <span class="bl">on_noticing_too_hard.txt</span>        <span class="dm">Mar 22</span>`},
+    {t:'out',v:`<span class="te">essay</span>   <span class="bl">the_barista_years.txt</span>           <span class="dm">Mar 20</span>`},
+    {t:'out',v:`<span class="te">essay</span>   <span class="bl">on_learning_languages_badly.txt</span> <span class="dm">Mar 18</span>`},
+    {t:'out',v:`<span class="pi">journal</span> <span class="bl">notes_instead_of_sleeping.txt</span>   <span class="dm">Mar 12</span>`},
+    {t:'out',v:`<span class="pi">journal</span> <span class="bl">9to6_6to9.txt</span>                   <span class="dm">Mar 08</span>`},
+    {t:'out',v:`<span class="pi">journal</span> <span class="bl">films_that_stayed.txt</span>            <span class="dm">Feb 28</span>`},
+    {t:'blank'},
+  ],
+  'cat things_i_cant_unnotice.txt':()=>[
+    {t:'blank'},{t:'head',v:'// things_i_cant_unnotice.txt'},
+    {t:'out',v:`There's a specific kind of curse where you start seeing`},
+    {t:'out',v:`something, and then you can't stop. Not a hallucination.`},
+    {t:'out',v:`Just — a pattern. A tension. A tiny thing that keeps happening.`},
+    {t:'blank'},
+    {t:'out',v:`<span class="dm">[ 1,200 words ]</span> <a href="essay_01.html" style="color:#4a7ab8">→ read full essay ↗</a>`},
+    {t:'blank'},
+  ],
+  'cat the_barista_years.txt':()=>[
+    {t:'blank'},{t:'head',v:'// the_barista_years.txt'},
+    {t:'out',v:`I made lattes for three years. I also learned more about`},
+    {t:'out',v:`people in those three years than in any class I've ever taken.`},
+    {t:'blank'},
+    {t:'out',v:`<span class="dm">[ 900 words ]</span> <a href="essay_02.html" style="color:#4a7ab8">→ read full essay ↗</a>`},
+    {t:'blank'},
+  ],
+  'cat on_noticing_too_hard.txt':()=>[
+    {t:'blank'},{t:'head',v:'// on_noticing_too_hard.txt'},
+    {t:'out',v:`I have a problem. I notice things. Not like, a superpower`},
+    {t:'out',v:`— more like a mild affliction that makes movies harder to watch.`},
+    {t:'blank'},
+    {t:'out',v:`<span class="dm">[ 800 words ]</span> <a href="essay_03.html" style="color:#4a7ab8">→ read full essay ↗</a>`},
+    {t:'blank'},
+  ],
+  'cat on_learning_languages_badly.txt':()=>[
+    {t:'blank'},{t:'head',v:'// on_learning_languages_badly.txt'},
+    {t:'out',v:`I'm learning French from a cartoon rat and Spanish from`},
+    {t:'out',v:`a Puerto Rican reggaeton artist. My Duolingo streak is zero.`},
+    {t:'blank'},
+    {t:'out',v:`<span class="dm">[ 750 words ]</span> <a href="essay_04.html" style="color:#4a7ab8">→ read full essay ↗</a>`},
+    {t:'blank'},
+  ],
+  'ls papers':()=>[
+    {t:'blank'},
+    {t:'head',v:'// ~/papers · HCI (5)'},
+    {t:'out',v:`<span class="mi">HCI-01</span>  From Retrieval to Reasoning           <span class="ye">preprint</span>`},
+    {t:'out',v:`<span class="mi">HCI-02</span>  Keeping Alternatives Alive           <span class="ye">CSCW 2026</span>`},
+    {t:'out',v:`<span class="mi">HCI-03</span>  When Documents Don't Connect         <span class="ye">preprint</span>`},
+    {t:'out',v:`<span class="mi">HCI-04</span>  Friction Before Failure              <span class="ye">preprint</span>`},
+    {t:'out',v:`<span class="mi">HCI-05</span>  Regulatory UX Framework             <span class="ye">umbrella</span>`},
+    {t:'blank'},
+    {t:'head',v:'// ~/papers · STS (4)'},
+    {t:'out',v:`<span class="te">STS-01</span>  Anticipated Accountability Conv.     <span class="ye">SSRN</span>`},
+    {t:'out',v:`<span class="te">STS-02</span>  Cognitive Friction in Proc. Texts   <span class="ye">SSRN</span>`},
+    {t:'out',v:`<span class="te">STS-03</span>  Responsibility Convergence          <span class="ye">SSRN</span>`},
+    {t:'out',v:`<span class="te">STS-04</span>  Premature Accountability Conv.      <span class="ye">4S Toronto</span>`},
+    {t:'blank'},
+    {t:'out',v:`→ <a href="https://sorakim-lab.github.io/papers" target="_blank" style="color:#4a7ab8">sorakim-lab.github.io/papers ↗</a>`},
+    {t:'blank'},
+  ],
+  'ls projects':()=>[
+    {t:'blank'},
+    {t:'head',v:'// ~/projects · Axis 01: Reasoning (2)'},
+    {t:'out',v:`<span class="mi">[R1]</span> Expanding Causal Reasoning under Closure Pressure · N=20`},
+    {t:'out',v:`<span class="mi">[R2]</span> Premature Convergence under Closure Pressure · N=20`},
+    {t:'blank'},
+    {t:'head',v:'// ~/projects · Axis 02: Navigation (4)'},
+    {t:'out',v:`<span class="te">[N1]</span> Procedural Visibility in SOP Navigation · N=20`},
+    {t:'out',v:`<span class="te">[N2]</span> Cross-Reference Visibility and Traceability · N=20`},
+    {t:'out',v:`<span class="te">[N3]</span> Navigation Friction and Loopback Behavior · N=20`},
+    {t:'out',v:`<span class="te">[N4]</span> Review Burden and Workflow Visibility · N=20`},
+    {t:'blank'},
+    {t:'head',v:'// ~/projects · Axis 03: Language (1)'},
+    {t:'out',v:`<span class="pi">[L1]</span> Cognitive Friction in Procedural Documentation · N=500`},
+    {t:'blank'},
+    {t:'head',v:'// ~/corpus'},
+    {t:'out',v:`<span class="ye">[C1]</span> FDA Warning Letters · N=50 · N=160 violations · 2016–2025`},
+    {t:'blank'},
+    {t:'out',v:`→ <a href="https://sorakim-lab.github.io/projects" target="_blank" style="color:#4a7ab8">sorakim-lab.github.io/projects ↗</a>`},
+    {t:'blank'},
+  ],
+  updates:()=>[
+    {t:'blank'},
+    {t:'head',v:'// UPDATES · March 2026'},
+    {t:'out',v:`<span class="mi">✓</span> 🎉 4S Toronto 2026 — PAC abstract submitted`},
+    {t:'out',v:`     Panel 74: TechnoPower`},
+    {t:'blank'},
+    {t:'out',v:`<span class="mi">✓</span> 🎉 CSCW 2026 — poster submitted`},
+    {t:'out',v:`     Keeping Alternatives Alive`},
+    {t:'blank'},
+    {t:'out',v:`<span class="ye">↻</span> 📝 9 papers v2.0 — SSRN revision under review`},
+    {t:'blank'},
+    {t:'out',v:`<span class="mi">✓</span> 🏛️ FDA Warning Letters corpus complete · N=50 · N=160`},
+    {t:'blank'},
+  ],
+  contact:()=>[
+    {t:'blank'},
+    {t:'head',v:'// CONTACT'},
+    {t:'out',v:`  <span class="te">email</span>     <a href="mailto:sorakim.lab@gmail.com" style="color:#4a7ab8">sorakim.lab@gmail.com</a>`},
+    {t:'out',v:`  <span class="te">research</span>  <a href="https://sorakim-lab.github.io" target="_blank" style="color:#4a7ab8">sorakim-lab.github.io</a>`},
+    {t:'out',v:`  <span class="te">ig</span>        <a href="https://instagram.com/sora.rchive_" target="_blank" style="color:#4a7ab8">@sora.rchive_</a>`},
+    {t:'out',v:`  <span class="te">cv</span>        <a href="assets/sorakim_cv_hci.pdf" target="_blank" style="color:#4a7ab8">sorakim_cv_hci.pdf ↗</a>`},
+    {t:'blank'},
+  ],
+  neofetch:()=>[
+    {t:'blank'},
+    {t:'out',v:`       <span style="font-size:28px">🐧</span>`},
+    {t:'out',v:`  <span class="te">sora</span><span class="dm">@</span><span class="mi">seoul</span>`},
+    {t:'out',v:`  <span class="dm">──────────────────</span>`},
+    {t:'out',v:`  <span class="ye">OS</span>        sora-os 2026.03 LTS`},
+    {t:'out',v:`  <span class="ye">DE</span>        macOS Big Sur (custom)`},
+    {t:'out',v:`  <span class="ye">kernel</span>    hci-sts-hybrid`},
+    {t:'out',v:`  <span class="ye">papers</span>    9 in progress`},
+    {t:'out',v:`  <span class="ye">latte art</span> rosetta certified`},
+    {t:'out',v:`  <span class="ye">film</span>      Ratatouille (top tier)`},
+    {t:'out',v:`  <span class="ye">memory</span>    always noticing`},
+    {t:'blank'},
+    {t:'out',v:`  <span style="background:#c4593a;color:#c4593a">▓▓▓</span><span style="background:#b8608a;color:#b8608a">▓▓▓</span><span style="background:#c89a2a;color:#c89a2a">▓▓▓</span><span style="background:#4a9e7e;color:#4a9e7e">▓▓▓</span><span style="background:#4a7ab8;color:#4a7ab8">▓▓▓</span><span style="background:#b0a8b8;color:#b0a8b8">▓▓▓</span>`},
+    {t:'blank'},
+  ],
+  fortune:()=>{
+    const q=[
+      ['my duolingo streak is zero. i regret nothing.','🦉'],
+      ['the only french words i pronounce correctly are croissant, baguette and ratatouille. certified by an actual french person.','🥐'],
+      ['swans [latte art]: pending. rosetta: certified. life: chaotic.','☕'],
+      ['i refreshed my email 14 times after submitting. normal behavior.','📬'],
+      ['9-to-6: QC. 6-to-9: researcher. sleep: somewhere in there probably.','😴'],
+      ['ratatouille is not about cooking. change my mind. (you can\'t.)','🐀'],
+      ['accountability doesn\'t just happen. it gets structured. i wrote 9 papers about this. please read them.','📄'],
+      ['the form wanted one cause. it was three things. it\'s always three things.','📋'],
+      ['iced americano #3. still noticing things. send help. or coffee.','☕'],
+      ['i moved to tokyo and learned japanese through sheer panic. it worked.','🗼'],
+      ['bad bunny is not a rapper. this is important. reggaeton. please.','📻'],
+      ['sudo make-coffee works. i checked. (rosetta, obviously.)','🐧'],
+      ['i have 9 papers in progress and 0 netflix shows finished. this is fine.','📺'],
+      ['someone said "that\'s just how the form works" and i wrote a paper about it.','🙃'],
+      ['"anyone can cook" is the most radical thing ever put in an animated film.','🐀'],
+      ['loopbacks are not user error. they are structural friction. i will die on this hill.','⛰️'],
+      ['made a macOS desktop with a linux terminal inside. completely normal.','🐧'],
+      ['currently: seoul. previously: tokyo, boston. next: unknown. always: noticing.','🌱'],
+      ['my latte art is rosetta-certified but my sleep schedule is not certified anything.','☕'],
+    ];
+    const [quote,emoji]=q[Math.floor(Math.random()*q.length)];
+    return [{t:'blank'},{t:'out',v:`${emoji} <span class="pi">"${quote}"</span>`},{t:'out',v:`<span class="dm">   — sora-fortune, probably true</span>`},{t:'blank'}];
+  },
+  'sudo make-coffee':()=>[
+    {t:'blank'},
+    {t:'out',v:`[sudo] password for sora: <span class="blink">▌</span>`},
+    {t:'out',v:`<span class="mi">✓</span> access granted (3yr barista credentials verified)`},
+    {t:'blank'},
+    {t:'out',v:`pulling espresso  ████████████ <span class="mi">done</span>`},
+    {t:'out',v:`steaming milk     ████████████ <span class="mi">done</span>`},
+    {t:'out',v:`latte art (rosetta) ██████████ <span class="mi">done</span>`},
+    {t:'blank'},
+    {t:'out',v:`<span class="mi">☕ oat latte ready.</span> rosetta certified, as always.`},
+    {t:'blank'},
+  ],
+  'ping sorakim-lab.github.io':()=>[
+    {t:'blank'},
+    {t:'out',v:`PING sorakim-lab.github.io`},
+    {t:'out',v:`64 bytes: seq=0 ttl=64 time=<span class="mi">1.9ms</span>`},
+    {t:'out',v:`64 bytes: seq=1 ttl=64 time=<span class="mi">2.1ms</span>`},
+    {t:'out',v:`64 bytes: seq=2 ttl=64 time=<span class="mi">1.7ms</span>`},
+    {t:'blank'},
+    {t:'out',v:`3 packets · <span class="mi">3 received</span> · 0% loss`},
+    {t:'out',v:`<span class="dm">→ site is alive.</span>`},
+    {t:'blank'},
+  ],
+  'grep "ratatouille" about.txt':()=>[
+    {t:'blank'},
+    {t:'out',v:`about.txt: <span class="te">Ratatouille: top tier.</span>`},
+    {t:'out',v:`<span class="dm">1 match — "anyone can cook." — Gusteau, probably Sora too</span>`},
+    {t:'blank'},
+  ],
+  pwd:()=>[{t:'out',v:'/home/sora/personal-space'},{t:'blank'}],
+  history:()=>{
+    const lines=[{t:'blank'},{t:'head',v:'// command history'}];
+    history_cmds.forEach((c,i)=>lines.push({t:'out',v:`  <span class="dm">${String(i+1).padStart(3)}</span>  ${c}`}));
+    lines.push({t:'blank'});return lines;
+  },
+  clear:()=>'__clear__',
+};
 
-  whoami: ()=>[
-    {t:'blank'},
-    {t:'out', v:`<span class="te">Sora Kim</span> · QC Project Lead & HCI Researcher`},
-    {t:'blank'},
-    {t:'out', v:`  <span class="mi">location</span>  Seoul, South Korea 🌱`},
-    {t:'out', v:`  <span class="mi">prev</span>      Tokyo 🗼 · Boston 🦞`},
-    {t:'out', v:`  <span class="mi">field</span>     HCI × STS · pharmaceutical GMP`},
-    {t:'out', v:`  <span class="mi">papers</span>    9 in progress (v2.0 under SSRN review)`},
-    {t:'out', v:`  <span class="mi">schedule</span>  9-to-6: QC. 6-to-9: research.`},
-    {t:'out', v:`  <span class="mi">vibe</span>      soft but sharp · always noticing`},
-    {t:'out', v:`  <span class="mi">latte art</span> yes (3yr barista · rosetta certified)`},
-    {t:'out', v:`  <span class="mi">japanese</span>  fluent enough to argue — Tokyo 1.5yr 🗼`},
-    {t:'out', v:`  <span class="mi">french</span>    croissant, baguette & ratatouille only 🥐🐀`},
-    {t:'out', v:`  <span class="mi">spanish</span>   bad bunny method 📻`},
-    {t:'out', v:`  <span class="mi">film</span>      Ratatouille 🐀 (top tier, non-negotiable)`},
-    {t:'blank'},
-  ],
+async function runCmd(val){
+  val=val.trim().toLowerCase();
+  if(!val)return;
+  history_cmds.push(val);
+  addPrompt(val);
+  const fn=commands[val];
+  if(!fn){
+    await printLines([
+      {t:'err',v:`sora-os: command not found: <b>${val}</b>`},
+      {t:'err',v:`try <span class="te">help</span> for available commands`},
+      {t:'blank'},
+    ]);
+  } else {
+    const r=fn();
+    if(r==='__clear__'){tout.innerHTML='';}
+    else await printLines(r);
+  }
+}
 
-  'cat about.txt': ()=>[
-    {t:'blank'},
-    {t:'head', v:'// about.txt'},
-    {t:'out', v:`okay so. hi. I'm <span class="te">Sora</span>.`},
-    {t:'blank'},
-    {t:'out', v:`I notice things a little too hard. always have. patterns,`},
-    {t:'out', v:`tensions, the quiet friction nobody names out loud.`},
-    {t:'out', v:`I write them down. then I keep turning them over until`},
-    {t:'out', v:`they become something worth keeping.`},
-    {t:'blank'},
-    {t:'out', v:`currently based in <span class="mi">Seoul</span>. previously: <span class="mi">Tokyo</span> 🗼 (1.5yr,`},
-    {t:'out', v:`learned Japanese via part-time jobs and mild chaos),`},
-    {t:'out', v:`<span class="mi">Boston</span> 🦞 (made a French friend who certified exactly`},
-    {t:'out', v:`3 words: croissant, baguette, ratatouille. nothing else).`},
-    {t:'blank'},
-    {t:'out', v:`by day: <span class="te">QC Project Lead</span>. by night: <span class="pi">HCI researcher</span>.`},
-    {t:'out', v:`9 papers in progress. 3 languages attempted.`},
-    {t:'out', v:`1 latte art style mastered (rosetta). swans: pending.`},
-    {t:'blank'},
-    {t:'out', v:`I study how accountability gets structured in regulated work —`},
-    {t:'out', v:`how systems shape what explanations survive before`},
-    {t:'out', v:`responsibility settles. it sounds abstract. it's not.`},
-    {t:'out', v:`I've lived inside these systems for years.`},
-    {t:'blank'},
-    {t:'out', v:`Ratatouille is the best film ever made. this is not a debate.`},
-    {t:'blank'},
-    {t:'out', v:`→ research: <a href="https://sorakim-lab.github.io" target="_blank" style="color:var(--blue)">sorakim-lab.github.io</a>`},
-    {t:'out', v:`→ email:    <a href="mailto:sorakim.lab@gmail.com" style="color:var(--blue)">sorakim.lab@gmail.com</a>`},
-    {t:'out', v:`→ ig:       <a href="https://instagram.com/sora.rchive_" target="_blank" style="color:var(--blue)">@sora.rchive_</a>`},
-    {t:'blank'},
-  ],
+/* tab + history */
+const allCmds=Object.keys(commands);
+tcmd.addEventListener('keydown',e=>{
+  if(e.key==='Tab'){
+    e.preventDefault();
+    const v=tcmd.value.toLowerCase();
+    const m=allCmds.filter(c=>c.startsWith(v));
+    if(m.length===1)tcmd.value=m[0];
+    else if(m.length>1){addPrompt(v);addLine({t:'out',v:m.map(c=>`<span class="te">${c}</span>`).join('  ')});scrollB();}
+    return;
+  }
+  if(e.key==='ArrowUp'){e.preventDefault();if(hist_idx<history_cmds.length-1){hist_idx++;tcmd.value=history_cmds[history_cmds.length-1-hist_idx];}}
+  if(e.key==='ArrowDown'){e.preventDefault();if(hist_idx>0){hist_idx--;tcmd.value=history_cmds[history_cmds.length-1-hist_idx];}else{hist_idx=-1;tcmd.value='';}}
+});
+tcmd.addEventListener('keydown',async e=>{
+  if(e.key!=='Enter')return;
+  const val=tcmd.value;tcmd.value='';hist_idx=-1;
+  await runCmd(val);
+});
+tterm.addEventListener('click',()=>tcmd.focus());
 
-  'cat diary.txt': ()=>[
-    {t:'blank'},
-    {t:'head', v:'// diary.txt · March 2026'},
-    {t:'out', v:`<span class="ye">Mar 25</span> 🐧✨`},
-    {t:'out', v:`  made a terminal website today. spent approximately`},
-    {t:'out', v:`  forever on the color palette. worth it? absolutely.`},
-    {t:'out', v:`  productive? we don't talk about that.`},
-    {t:'out', v:`  iced americano #3. no regrets. maybe #4 later.`},
-    {t:'blank'},
-    {t:'out
+/* dock magnification */
+document.getElementById('dock').addEventListener('mousemove',e=>{
+  document.querySelectorAll('.dock-img').forEach(img=>{
+    const r=img.closest('.dock-ico').getBoundingClientRect();
+    const dist=Math.abs(e.clientX-(r.left+r.width/2));
+    const sz=dist<70?48+(64-48)*Math.cos((dist/70)*(Math.PI/2)):48;
+    img.style.width=sz+'px';img.style.height=sz+'px';img.style.fontSize=(sz*.54)+'px';
+  });
+});
+document.getElementById('dock').addEventListener('mouseleave',()=>{
+  document.querySelectorAll('.dock-img').forEach(i=>{i.style.width='48px';i.style.height='48px';i.style.fontSize='26px';});
+});
+</script>
+</body>
+</html>
