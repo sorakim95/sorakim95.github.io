@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+<title>sora@seoul</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐧</text></svg>"/>
+<link rel="manifest" href="manifest.json"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'Inter',-apple-system,sans-serif;background:#050818}
+
+/* WALLPAPER */
+#wallpaper{position:fixed;inset:0;z-index:0}
+
+/* STATUS BAR */
+#statusbar{position:fixed;top:0;left:0;right:0;height:44px;z-index:300;display:flex;align-items:flex-end;justify-content:space-between;padding:0 20px 8px;pointer-events:none}
+.sb-time{font-size:15px;font-weight:600;color:#fff;letter-spacing:-.02em}
+.sb-icons{display:flex;align-items:center;gap:6px;font-size:13px;color:#fff}
+
+/* HOME SCREEN */
+#homescreen{position:fixed;top:44px;left:0;right:0;bottom:80px;z-index:10;overflow:hidden;padding:20px 16px 0}
+
+/* PAGE DOTS */
+#pagedots{position:fixed;bottom:92px;left:0;right:0;z-index:11;display:flex;justify-content:center;gap:6px}
+.pdot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.35);transition:background .2s}
+.pdot.active{background:rgba(255,255,255,.9)}
+
+/* APP GRID */
+.app-page{display:grid;grid-template-columns:repeat(4,1fr);gap:0;padding:0;width:100%;row-gap:8px}
+.app{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 4px;border-radius:16px;cursor:pointer;transition:opacity .1s;-webkit-touch-callout:none}
+.app:active{opacity:.7}
+.app.long-press{animation:wiggle .15s ease}
+@keyframes wiggle{0%,100%{transform:rotate(0deg)}25%{transform:rotate(-2deg)}75%{transform:rotate(2deg)}}
+.app-icon{width:60px;height:60px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:30px;box-shadow:0 2px 8px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.15);position:relative;overflow:hidden}
+.app-icon::after{content:'';position:absolute;top:0;left:0;right:0;height:45%;background:linear-gradient(180deg,rgba(255,255,255,.18),transparent);border-radius:14px 14px 0 0;pointer-events:none}
+.app-label{font-size:11px;font-weight:500;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.8);text-align:center;line-height:1.3;max-width:72px;word-break:break-word;letter-spacing:-.01em}
+
+/* ICON COLORS */
+.ico-terminal{background:linear-gradient(160deg,#2a2040,#0d0820)}
+.ico-folder{background:linear-gradient(160deg,#5db8f5,#1a8fd1)}
+.ico-papers{background:linear-gradient(160deg,#ff6b6b,#cc2a2a)}
+.ico-diary{background:linear-gradient(160deg,#f5a0c8,#c44080)}
+.ico-mail{background:linear-gradient(160deg,#60b8f5,#1060c8)}
+.ico-ig{background:linear-gradient(160deg,#f08040,#c02080)}
+.ico-research{background:linear-gradient(160deg,#f5c840,#d08000)}
+.ico-cv{background:linear-gradient(160deg,#a0d8a0,#2a8040)}
+.ico-writing{background:linear-gradient(160deg,#d0a8f8,#6030c0)}
+
+/* DOCK */
+#dock{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);z-index:100;display:flex;align-items:center;gap:10px;padding:10px 20px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.25);border-radius:24px;backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);box-shadow:0 4px 24px rgba(0,0,0,.3)}
+.dock-app{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer}
+.dock-icon{width:52px;height:52px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 2px 6px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.15);position:relative;overflow:hidden;transition:transform .15s}
+.dock-icon::after{content:'';position:absolute;top:0;left:0;right:0;height:45%;background:linear-gradient(180deg,rgba(255,255,255,.18),transparent);border-radius:13px 13px 0 0;pointer-events:none}
+.dock-app:active .dock-icon{transform:scale(.9)}
+
+/* TERMINAL BOTTOM SHEET */
+#term-sheet{position:fixed;bottom:0;left:0;right:0;z-index:500;transform:translateY(100%);transition:transform .35s cubic-bezier(.32,0,.67,0);border-radius:20px 20px 0 0;overflow:hidden;box-shadow:0 -8px 40px rgba(0,0,0,.6);display:flex;flex-direction:column;height:70vh}
+#term-sheet.open{transform:translateY(0);transition:transform .35s cubic-bezier(.33,1,.68,1)}
+.ts-handle-bar{background:#2d2640;padding:12px 16px 8px;display:flex;flex-direction:column;align-items:center;gap:8px;flex-shrink:0}
+.ts-handle{width:36px;height:4px;border-radius:2px;background:rgba(255,255,255,.25)}
+.ts-title-row{display:flex;align-items:center;justify-content:space-between;width:100%}
+.ts-dots{display:flex;gap:5px}
+.ts-dot{width:10px;height:10px;border-radius:50%}
+.ts-dot.r{background:#ff5f57}.ts-dot.y{background:#febc2e}.ts-dot.g{background:#28c840}
+.ts-title{font-family:'Space Mono',monospace;font-size:10px;color:rgba(255,255,255,.4);letter-spacing:.04em}
+.ts-close{font-size:16px;color:rgba(255,255,255,.5);cursor:pointer;padding:4px 8px}
+.ts-out{flex:1;overflow-y:auto;padding:14px 16px;background:#f5f0e8;background-image:radial-gradient(circle,rgba(26,20,40,.06) 1px,transparent 1px);background-size:20px 20px;-webkit-overflow-scrolling:touch}
+.ts-out::-webkit-scrollbar{display:none}
+.tline{margin-bottom:2px;line-height:1.75;font-size:11px;font-family:'Space Mono',monospace;white-space:pre-wrap;word-break:break-word}
+.tline.out{color:#7a6e7e}
+.tline.err{color:#c4593a}
+.tline.head{color:#1a1428;font-family:'Press Start 2P',monospace;font-size:5px;letter-spacing:.06em;margin:8px 0 4px;border-bottom:1px solid rgba(26,20,40,.1);padding-bottom:4px}
+.tline.blank{min-height:8px}
+.tline.prompt-line{display:flex;align-items:flex-start;gap:6px}
+.tline b{color:#1a1428;font-weight:700}
+.te{color:#c4593a}.mi{color:#4a9e7e}.pi{color:#b8608a}.bl{color:#4a7ab8}.ye{color:#c89a2a}.dm{color:#b0a8b8}
+.ts-input{display:flex;align-items:center;gap:8px;padding:10px 16px;border-top:1px solid rgba(26,20,40,.08);background:#ede8dc;flex-shrink:0}
+.ts-ps1{color:#c4593a;font-family:'Press Start 2P',monospace;font-size:5px;white-space:nowrap}
+.ts-ps1 .sym{color:#4a9e7e}
+#tcmd{flex:1;background:transparent;border:none;outline:none;font-family:'Space Mono',monospace;font-size:12px;color:#1a1428;caret-color:#c4593a;-webkit-user-select:text;user-select:text}
+#tcmd::placeholder{color:#b0a8b8;font-size:10px}
+
+/* OVERLAY */
+#sheet-overlay{position:fixed;inset:0;z-index:490;background:rgba(0,0,0,.4);backdrop-filter:blur(4px);display:none}
+#sheet-overlay.open{display:block}
+
+/* EASTER EGG HINT */
+#egg-hint{position:fixed;bottom:96px;left:50%;transform:translateX(-50%);z-index:200;background:rgba(0,0,0,.7);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:8px 16px;font-size:11px;color:rgba(255,255,255,.8);font-family:'Space Mono',monospace;white-space:nowrap;opacity:0;transition:opacity .3s;pointer-events:none}
+#egg-hint.show{opacity:1}
+
+/* CONTACT SHEET */
+#contact-sheet{position:fixed;bottom:0;left:0;right:0;z-index:600;transform:translateY(100%);transition:transform .35s cubic-bezier(.32,0,.67,0);border-radius:20px 20px 0 0;background:#f5f0e8;overflow:hidden;box-shadow:0 -8px 40px rgba(0,0,0,.6)}
+#contact-sheet.open{transform:translateY(0);transition:transform .35s cubic-bezier(.33,1,.68,1)}
+.cs-handle{display:flex;justify-content:center;padding:12px 0 8px;background:#f5f0e8}
+.cs-handle-bar{width:36px;height:4px;border-radius:2px;background:rgba(26,20,40,.2)}
+.cs-title{font-family:'Press Start 2P',monospace;font-size:6px;color:#1a1428;padding:0 24px 16px;letter-spacing:.04em}
+.cs-item{display:flex;align-items:center;gap:14px;padding:14px 24px;border-bottom:1px solid rgba(26,20,40,.07);cursor:pointer;text-decoration:none}
+.cs-item:active{background:rgba(26,20,40,.05)}
+.cs-icon{font-size:22px;width:32px;text-align:center}
+.cs-text{font-family:'Space Mono',monospace}
+.cs-label{font-size:12px;color:#1a1428;font-weight:700}
+.cs-sub{font-size:10px;color:#7a6e7e}
+.cs-close-btn{margin:12px 24px 28px;padding:14px;text-align:center;background:#2d2640;border-radius:12px;font-family:'Space Mono',monospace;font-size:12px;color:#fff;cursor:pointer;font-weight:700}
+</style>
+</head>
+<body>
+
+<canvas id="wallpaper"></canvas>
+
+<!-- STATUS BAR -->
+<div id="statusbar">
+  <span class="sb-time" id="clock">9:41</span>
+  <div class="sb-icons"><span>📶</span><span>🔋</span></div>
+</div>
+
+<!-- HOME SCREEN -->
+<div id="homescreen">
+  <div class="app-page" id="app-grid">
+
+    <!-- Row 1 -->
+    <div class="app" id="app-terminal" data-long="terminal">
+      <div class="app-icon ico-terminal">🐧</div>
+      <div class="app-label">Terminal</div>
+    </div>
+    <div class="app" onclick="openContactSheet()">
+      <div class="app-icon ico-mail">✉️</div>
+      <div class="app-label">Mail</div>
+    </div>
+    <div class="app" onclick="window.open('https://sorakim-lab.github.io/papers','_blank')">
+      <div class="app-icon ico-papers">📄</div>
+      <div class="app-label">Papers</div>
+    </div>
+    <div class="app" onclick="window.open('https://sorakim-lab.github.io/projects','_blank')">
+      <div class="app-icon ico-folder">🗂</div>
+      <div class="app-label">Projects</div>
+    </div>
+
+    <!-- Row 2 -->
+    <div class="app" onclick="window.open('https://sorakim-lab.github.io','_blank')">
+      <div class="app-icon ico-research">🔬</div>
+      <div class="app-label">Research</div>
+    </div>
+    <div class="app" onclick="runTermCmd('cat diary.txt')">
+      <div class="app-icon ico-diary">📔</div>
+      <div class="app-label">Diary</div>
+    </div>
+    <div class="app" onclick="runTermCmd('ls writing')">
+      <div class="app-icon ico-writing">✍️</div>
+      <div class="app-label">Writing</div>
+    </div>
+    <div class="app" onclick="window.open('assets/sorakim_cv_hci.pdf','_blank')">
+      <div class="app-icon ico-cv">📋</div>
+      <div class="app-label">CV</div>
+    </div>
+
+    <!-- Row 3 -->
+    <div class="app" onclick="window.open('https://instagram.com/sora.rchive_','_blank')">
+      <div class="app-icon ico-ig">📷</div>
+      <div class="app-label">Instagram</div>
+    </div>
+    <div class="app" onclick="runTermCmd('fortune')">
+      <div class="app-icon" style="background:linear-gradient(160deg,#f0d060,#c08020)">🎲</div>
+      <div class="app-label">Fortune</div>
+    </div>
+    <div class="app" onclick="runTermCmd('neofetch')">
+      <div class="app-icon" style="background:linear-gradient(160deg,#60d0f0,#2080b0)">💻</div>
+      <div class="app-label">Neofetch</div>
+    </div>
+    <div class="app" onclick="runTermCmd('updates')">
+      <div class="app-icon" style="background:linear-gradient(160deg,#80f080,#208030)">📡</div>
+      <div class="app-label">Updates</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- PAGE DOTS -->
+<div id="pagedots">
+  <div class="pdot active"></div>
+</div>
+
+<!-- EASTER EGG HINT -->
+<div id="egg-hint">🐧 hold for terminal</div>
+
+<!-- DOCK -->
+<div id="dock">
+  <div class="dock-app" id="dock-terminal" data-long="terminal">
+    <div class="dock-icon ico-terminal">🐧</div>
+  </div>
+  <div class="dock-app" onclick="openContactSheet()">
+    <div class="dock-icon ico-mail">✉️</div>
+  </div>
+  <div class="dock-app" onclick="window.open('https://sorakim-lab.github.io/papers','_blank')">
+    <div class="dock-icon ico-papers">📄</div>
+  </div>
+  <div class="dock-app" onclick="window.open('https://sorakim-lab.github.io','_blank')">
+    <div class="dock-icon ico-research">🔬</div>
+  </div>
+</div>
+
+<!-- SHEET OVERLAY -->
+<div id="sheet-overlay" onclick="closeAllSheets()"></div>
+
+<!-- TERMINAL BOTTOM SHEET -->
+<div id="term-sheet">
+  <div class="ts-handle-bar">
+    <div class="ts-handle"></div>
+    <div class="ts-title-row">
+      <div class="ts-dots">
+        <div class="ts-dot r"></div>
+        <div class="ts-dot y"></div>
+        <div class="ts-dot g"></div>
+      </div>
+      <div class="ts-title">🐧 sora@seoul</div>
+      <div class="ts-close" onclick="closeTermSheet()">✕</div>
+    </div>
+  </div>
+  <div class="ts-out" id="ts-out"></div>
+  <div class="ts-input">
+    <span class="ts-ps1">sora@seoul ~<span class="sym"> $</span></span>
+    <input id="tcmd" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="type 'help' →" inputmode="text"/>
+  </div>
+</div>
+
+<!-- CONTACT SHEET -->
+<div id="contact-sheet">
+  <div class="cs-handle"><div class="cs-handle-bar"></div></div>
+  <div class="cs-title">// GET IN TOUCH</div>
+  <a class="cs-item" href="sms:+821081197439">
+    <div class="cs-icon">💬</div>
+    <div class="cs-text"><div class="cs-label">iMessage</div><div class="cs-sub">+82 10-8119-7439</div></div>
+  </a>
+  <a class="cs-item" href="mailto:sorakim.lab@gmail.com">
+    <div class="cs-icon">✉️</div>
+    <div class="cs-text"><div class="cs-label">Email</div><div class="cs-sub">sorakim.lab@gmail.com</div></div>
+  </a>
+  <a class="cs-item" href="assets/sorakim_cv_hci.pdf" target="_blank">
+    <div class="cs-icon">📄</div>
+    <div class="cs-text"><div class="cs-label">Download CV</div><div class="cs-sub">sorakim_cv_hci.pdf</div></div>
+  </a>
+  <a class="cs-item" href="https://instagram.com/sora.rchive_" target="_blank">
+    <div class="cs-icon">📷</div>
+    <div class="cs-text"><div class="cs-label">Instagram</div><div class="cs-sub">@sora.rchive_</div></div>
+  </a>
+  <div class="cs-close-btn" onclick="closeContactSheet()">close</div>
+</div>
+
+<script>
+/* WALLPAPER */
+const cv=document.getElementById('wallpaper'),cx=cv.getContext('2d');
+function resize(){cv.width=window.innerWidth;cv.height=window.innerHeight;drawWall()}
+function drawWall(){
+  const W=cv.width,H=cv.height;
+  const sky=cx.createLinearGradient(0,0,W*.8,H);
+  sky.addColorStop(0,'#050818');sky.addColorStop(.25,'#0d1240');sky.addColorStop(.5,'#1a0a50');sky.addColorStop(.7,'#2d0860');sky.addColorStop(.85,'#3d1040');sky.addColorStop(1,'#0a0818');
+  cx.fillStyle=sky;cx.fillRect(0,0,W,H);
+  [[W*.4,H*.2,W*.6,'rgba(60,180,220,.35)','rgba(120,60,200,.2)'],[W*.7,H*.35,W*.4,'rgba(200,80,180,.25)',null],[W*.15,H*.4,W*.35,'rgba(40,200,160,.2)',null]].forEach(([x,y,r,c1,c2])=>{
+    const g=cx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,c1);g.addColorStop(c2?.5:1,c2||'transparent');if(c2)g.addColorStop(1,'transparent');cx.fillStyle=g;cx.fillRect(0,0,W,H);
+  });
+  const mts=[
+    {pts:[[0,.58],[.08,.44],[.2,.50],[.32,.40],[.46,.48],[.6,.38],[.74,.46],[.88,.52],[1,.56],[1,1],[0,1]],c:'rgba(5,3,18,.95)'},
+    {pts:[[0,.70],[.15,.60],[.3,.64],[.48,.58],[.64,.62],[.8,.66],[1,.70],[1,1],[0,1]],c:'rgba(3,1,12,.98)'},
+    {pts:[[0,.80],[.3,.72],[.6,.76],[.9,.72],[1,.78],[1,1],[0,1]],c:'rgba(2,1,8,1)'},
+  ];
+  mts.forEach(({pts,c})=>{cx.beginPath();pts.forEach(([x,y],i)=>i?cx.lineTo(x*W,y*H):cx.moveTo(x*W,y*H));cx.closePath();cx.fillStyle=c;cx.fill()});
+  for(let i=0;i<120;i++){const x=Math.random()*W,y=Math.random()*H*.6,r=Math.random()*.8+.1;cx.fillStyle=`rgba(255,255,255,${Math.random()*.8+.2})`;cx.beginPath();cx.arc(x,y,r,0,Math.PI*2);cx.fill()}
+}
+resize();window.addEventListener('resize',resize);
+
+/* CLOCK */
+function updateClock(){const d=new Date(),h=d.getHours()%12||12,m=String(d.getMinutes()).padStart(2,'0');document.getElementById('clock').textContent=`${h}:${m}`}
+updateClock();setInterval(updateClock,10000);
+
+/* LONG PRESS for terminal */
+let lpTimer=null,lpTarget=null;
+const hint=document.getElementById('egg-hint');
+let hintShown=false;
+
+function startLP(el){
+  lpTarget=el;
+  lpTimer=setTimeout(()=>{
+    openTermSheet();
+    lpTarget=null;
+  },600);
+}
+function cancelLP(){clearTimeout(lpTimer);lpTimer=null}
+
+// show hint once on first load
+setTimeout(()=>{hint.classList.add('show');setTimeout(()=>hint.classList.remove('show'),2500)},1200);
+
+['app-terminal','dock-terminal'].forEach(id=>{
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.addEventListener('touchstart',e=>{startLP(el);e.preventDefault()},{passive:false});
+  el.addEventListener('touchend',cancelLP);
+  el.addEventListener('touchmove',cancelLP);
+  // desktop fallback
+  el.addEventListener('mousedown',()=>startLP(el));
+  el.addEventListener('mouseup',cancelLP);
+  el.addEventListener('mouseleave',cancelLP);
+});
+
+/* TERMINAL SHEET */
+let termBooted=false;
+const tsOut=document.getElementById('ts-out'),tcmd=document.getElementById('tcmd');
+
+function openTermSheet(){
+  document.getElementById('term-sheet').classList.add('open');
+  document.getElementById('sheet-overlay').classList.add('open');
+  if(!termBooted){termBooted=true;bootTerm()}
+  setTimeout(()=>tcmd.focus(),400);
+}
+function closeTermSheet(){
+  document.getElementById('term-sheet').classList.remove('open');
+  document.getElementById('sheet-overlay').classList.remove('open');
+}
+function runTermCmd(cmd){openTermSheet();setTimeout(()=>runCmd(cmd),termBooted?100:1800)}
+
+/* CONTACT SHEET */
+function openContactSheet(){
+  document.getElementById('contact-sheet').classList.add('open');
+  document.getElementById('sheet-overlay').classList.add('open');
+}
+function closeContactSheet(){
+  document.getElementById('contact-sheet').classList.remove('open');
+  document.getElementById('sheet-overlay').classList.remove('open');
+}
+function closeAllSheets(){closeTermSheet();closeContactSheet()}
+
+/* TERMINAL ENGINE */
+function scrollB(){tsOut.scrollTop=tsOut.scrollHeight}
+function addLine(cfg,delay=0){
+  return new Promise(res=>setTimeout(()=>{
+    const d=document.createElement('div');
+    d.className='tline '+(cfg.t==='blank'?'blank':cfg.t==='head'?'head':cfg.t==='err'?'err':'out');
+    d.innerHTML=cfg.v||'';tsOut.appendChild(d);scrollB();res();
+  },delay));
+}
+function addPrompt(text){
+  const d=document.createElement('div');d.className='tline prompt-line';
+  d.innerHTML=`<span class="ts-ps1" style="font-family:'Press Start 2P',monospace;font-size:5px;color:#c4593a;white-space:nowrap;padding-top:3px">sora@seoul ~<span style="color:#4a9e7e"> $</span></span> <span style="font-size:11px">${text}</span>`;
+  tsOut.appendChild(d);
+}
+async function printLines(lines){for(let i=0;i<lines.length;i++)await addLine(lines[i],i*30)}
+
+async function bootTerm(){
+  const b=[
+    {t:'out',v:`<span style="font-family:'Press Start 2P',monospace;font-size:5px;line-height:2.2;color:#c4593a">  ██████╗  ██████╗ ██████╗  █████╗ </span>`},
+    {t:'out',v:`<span style="font-family:'Press Start 2P',monospace;font-size:5px;line-height:2.2;color:#b8608a">  ██╔════╝ ██╔═══██╗██╔══██╗██╔══██╗</span>`},
+    {t:'out',v:`<span style="font-family:'Press Start 2P',monospace;font-size:5px;line-height:2.2;color:#c89a2a">  ╚█████╗  ██║   ██║██████╔╝███████║</span>`},
+    {t:'out',v:`<span style="font-family:'Press Start 2P',monospace;font-size:5px;line-height:2.2;color:#4a9e7e">   ╚═══██╗ ██║   ██║██╔══██╗██╔══██║</span>`},
+    {t:'out',v:`<span style="font-family:'Press Start 2P',monospace;font-size:5px;line-height:2.2;color:#4a7ab8">  ██████╔╝ ╚██████╔╝██║  ██║██║  ██║</span>`},
+    {t:'out',v:`<span style="font-family:'Press Start 2P',monospace;font-size:5px;line-height:2.2;color:#b0a8b8">  ╚═════╝   ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝</span>`},
+    {t:'blank'},
+    {t:'out',v:`<span class="mi">sora-os</span> <span class="ye">2026.03</span> — <span class="pi">easter egg unlocked 🐧</span>`},
+    {t:'out',v:`you found the terminal. nice.`},
+    {t:'blank'},
+    {t:'out',v:`type <span class="te">help</span> to see what's here.`},
+    {t:'blank'},
+  ];
+  for(let i=0;i<b.length;i++)await addLine(b[i],i*45);
+}
+
+const hist=[];let hidx=-1;
+const commands={
+  help:()=>[
+    {t:'head',v:'// COMMANDS'},
+    {t:'out',v:`  <span class="te">whoami</span>          — who is sora?`},
+    {t:'out',v:`  <span class="te">cat about.txt</span>   — more about me`},
+    {t:'out',v:`  <span class="te">cat diary.txt</span>   — diary entries`},
+    {t:'out',v:`  <span class="te">ls writing</span>      — essays`},
+    {t:'out',v:`  <span class="te">ls papers</span>       — research papers`},
+    {t:'out',v:`  <span class="te">ls projects</span>     — projects`},
+    {t:'out',v:`  <span class="te">updates</span>         — latest news`},
+    {t:'out',v:`  <span class="pi">fortune</span>         — random quote`},
+    {t:'out',v:`  <span class="mi">sudo make-coffee</span> — ☕`},
+    {t:'out',v:`  <span class="dm">clear</span>           — clear`},
+    {t:'blank'},
+  ],
+  whoami:()=>[
+    {t:'blank'},
+    {t:'out',v:`<span class="te">Sora Kim</span> · QC Lead & HCI Researcher`},
+    {t:'blank'},
+    {t:'out',v:`  <span class="mi">location</span>  Seoul 🌱`},
+    {t:'out',v:`  <span class="mi">prev</span>      Tokyo 🗼 · Boston 🦞`},
+    {t:'out',v:`  <span class="mi">field</span>     HCI × STS · pharma GMP`},
+    {t:'out',v:`  <span class="mi">papers</span>    9 in progress`},
+    {t:'out',v:`  <span class="mi">latte art</span> rosetta certified ☕`},
+    {t:'out',v:`  <span class="mi">film</span>      Ratatouille 🐀 (non-negotiable)`},
+    {t:'blank'},
+  ],
+  'cat about.txt':()=>[
+    {t:'blank'},{t:'head',v:'// about.txt'},
+    {t:'out',v:`hi. I'm <span class="te">Sora</span>. I notice things a little too hard.`},
+    {t:'blank'},
+    {t:'out',v:`Seoul → Tokyo 🗼 → Boston 🦞 → Seoul again.`},
+    {t:'out',v:`QC by day. HCI researcher by night.`},
+    {t:'out',v:`9 papers. 3 languages attempted. 1 latte art style mastered.`},
+    {t:'blank'},
+    {t:'out',v:`Ratatouille is the best film ever made. not debating this.`},
+    {t:'blank'},
+    {t:'out',v:`→ <a href="https://sorakim-lab.github.io" target="_blank" style="color:#4a7ab8">sorakim-lab.github.io</a>`},
+    {t:'blank'},
+  ],
+  'cat diary.txt':()=>[
+    {t:'blank'},{t:'head',v:'// diary.txt · March 2026'},
+    {t:'out',v:`<span class="ye">Mar 25</span> made a terminal website. spent forever on`},
+    {t:'out',v:`        color palette. iced americano #3.`},
+    {t:'blank'},
+    {t:'out',v:`<span class="ye">Mar 20</span> SUBMITTED. 4S Toronto 2026. PAC paper.`},
+    {t:'out',v:`        refreshed email 14 times. normal.`},
+    {t:'blank'},
+    {t:'out',v:`<span class="ye">Mar 18</span> CSCW 2026 poster done!! 2am finish.`},
+    {t:'out',v:`        18/20. still gets me every time.`},
+    {t:'blank'},
+    {t:'out',v:`<span class="dm">// always noticing. ☕🐧</span>`},
+    {t:'blank'},
+  ],
+  'ls writing':()=>[
+    {t:'blank'},{t:'head',v:'// ~/writing'},
+    {t:'out',v:`<span class="bl">things_i_cant_unnotice.txt</span>      <span class="dm">Mar 25</span>`},
+    {t:'out',v:`<span class="bl">on_noticing_too_hard.txt</span>        <span class="dm">Mar 22</span>`},
+    {t:'out',v:`<span class="bl">the_barista_years.txt</span>           <span class="dm">Mar 20</span>`},
+    {t:'out',v:`<span class="bl">on_learning_languages_badly.txt</span> <span class="dm">Mar 18</span>`},
+    {t:'out',v:`<span class="bl">notes_instead_of_sleeping.txt</span>   <span class="dm">Mar 12</span>`},
+    {t:'out',v:`<span class="bl">9to6_6to9.txt</span>                   <span class="dm">Mar 08</span>`},
+    {t:'out',v:`<span class="bl">films_that_stayed.txt</span>           <span class="dm">Feb 28</span>`},
+    {t:'blank'},
+  ],
+  'ls papers':()=>[
+    {t:'blank'},{t:'head',v:'// ~/papers · HCI'},
+    {t:'out',v:`<span class="mi">HCI-01</span>  From Retrieval to Reasoning`},
+    {t:'out',v:`<span class="mi">HCI-02</span>  Keeping Alternatives Alive  <span class="ye">CSCW 2026</span>`},
+    {t:'out',v:`<span class="mi">HCI-03</span>  When Documents Don't Connect`},
+    {t:'out',v:`<span class="mi">HCI-04</span>  Friction Before Failure`},
+    {t:'out',v:`<span class="mi">HCI-05</span>  Regulatory UX Framework`},
+    {t:'blank'},{t:'head',v:'// ~/papers · STS'},
+    {t:'out',v:`<span class="te">STS-01</span>  Anticipated Accountability Conv.  <span class="ye">SSRN</span>`},
+    {t:'out',v:`<span class="te">STS-02</span>  Cognitive Friction               <span class="ye">SSRN</span>`},
+    {t:'out',v:`<span class="te">STS-03</span>  Responsibility Convergence       <span class="ye">SSRN</span>`},
+    {t:'out',v:`<span class="te">STS-04</span>  Premature Accountability Conv.   <span class="ye">4S Toronto</span>`},
+    {t:'blank'},
+    {t:'out',v:`→ <a href="https://sorakim-lab.github.io/papers" target="_blank" style="color:#4a7ab8">sorakim-lab.github.io/papers ↗</a>`},
+    {t:'blank'},
+  ],
+  'ls projects':()=>[
+    {t:'blank'},{t:'head',v:'// ~/projects'},
+    {t:'out',v:`<span class="mi">[R1]</span> Causal Reasoning under Closure Pressure`},
+    {t:'out',v:`<span class="mi">[R2]</span> Premature Convergence · N=20`},
+    {t:'out',v:`<span class="te">[N1]</span> Procedural Visibility in SOP Nav`},
+    {t:'out',v:`<span class="te">[N2]</span> Cross-Reference Visibility`},
+    {t:'out',v:`<span class="te">[N3]</span> Navigation Friction & Loopback`},
+    {t:'out',v:`<span class="te">[N4]</span> Review Burden & Workflow Visibility`},
+    {t:'out',v:`<span class="pi">[L1]</span> Cognitive Friction in Proc. Docs · N=500`},
+    {t:'out',v:`<span class="ye">[C1]</span> FDA Warning Letters · N=50 · N=160`},
+    {t:'blank'},
+  ],
+  updates:()=>[
+    {t:'blank'},{t:'head',v:'// UPDATES · March 2026'},
+    {t:'out',v:`<span class="mi">✓</span> 4S Toronto 2026 — PAC abstract submitted`},
+    {t:'out',v:`<span class="mi">✓</span> CSCW 2026 — poster submitted`},
+    {t:'out',v:`<span class="ye">↻</span> 9 papers v2.0 — in progress`},
+    {t:'out',v:`<span class="mi">✓</span> FDA corpus complete · N=50 · N=160`},
+    {t:'blank'},
+  ],
+  fortune:()=>{
+    const q=[
+      ['my duolingo streak is zero. i regret nothing.','🦉'],
+      ['the only french words I know: croissant, baguette, ratatouille.','🥐'],
+      ['rosetta certified. swans: pending.','☕'],
+      ['refreshed email 14 times after submitting. normal behavior.','📬'],
+      ['9-to-6: QC. 6-to-9: researcher. sleep: somewhere in there.','😴'],
+      ['"anyone can cook" is the most radical thing in an animated film.','🐀'],
+      ['iced americano #3. still noticing things.','☕'],
+      ['learned japanese through sheer panic in tokyo. it worked.','🗼'],
+      ['bad bunny is not a rapper. reggaeton. please.','📻'],
+    ];
+    const [q2,e]=q[Math.floor(Math.random()*q.length)];
+    return [{t:'blank'},{t:'out',v:`${e} <span class="pi">"${q2}"</span>`},{t:'out',v:`<span class="dm">   — sora-fortune</span>`},{t:'blank'}];
+  },
+  'sudo make-coffee':()=>[
+    {t:'blank'},
+    {t:'out',v:`<span class="mi">✓</span> credentials verified (3yr barista)`},
+    {t:'out',v:`pulling espresso  ████████ <span class="mi">done</span>`},
+    {t:'out',v:`steaming milk     ████████ <span class="mi">done</span>`},
+    {t:'out',v:`rosetta art       ████████ <span class="mi">done</span>`},
+    {t:'blank'},
+    {t:'out',v:`<span class="mi">☕ oat latte ready.</span>`},
+    {t:'blank'},
+  ],
+  neofetch:()=>[
+    {t:'blank'},
+    {t:'out',v:`  🐧  <span class="te">sora</span><span class="dm">@</span><span class="mi">seoul</span>`},
+    {t:'out',v:`  <span class="ye">OS</span>     sora-os 2026.03 LTS`},
+    {t:'out',v:`  <span class="ye">kernel</span> hci-sts-hybrid`},
+    {t:'out',v:`  <span class="ye">papers</span> 9 in progress`},
+    {t:'out',v:`  <span class="ye">art</span>    rosetta certified`},
+    {t:'out',v:`  <span class="ye">film</span>   Ratatouille 🐀`},
+    {t:'blank'},
+  ],
+  clear:()=>'__clear__',
+};
+
+async function runCmd(val){
+  val=val.trim().toLowerCase();
+  if(!val)return;
+  hist.push(val);hidx=-1;
+  addPrompt(val);
+  const fn=commands[val];
+  if(!fn){
+    await printLines([
+      {t:'err',v:`command not found: <b>${val}</b>`},
+      {t:'err',v:`try <span class="te">help</span>`},
+      {t:'blank'},
+    ]);
+  } else {
+    const r=fn();
+    if(r==='__clear__')tsOut.innerHTML='';
+    else await printLines(r);
+  }
+}
+
+tcmd.addEventListener('keydown',e=>{
+  if(e.key==='Enter'){const v=tcmd.value;tcmd.value='';runCmd(v)}
+  if(e.key==='ArrowUp'){e.preventDefault();if(hidx<hist.length-1){hidx++;tcmd.value=hist[hist.length-1-hidx]}}
+  if(e.key==='ArrowDown'){e.preventDefault();if(hidx>0){hidx--;tcmd.value=hist[hist.length-1-hidx]}else{hidx=-1;tcmd.value=''}}
+});
+tsOut.addEventListener('click',()=>tcmd.focus());
+
+/* SWIPE DOWN TO CLOSE TERMINAL */
+let touchStartY=0;
+const sheet=document.getElementById('term-sheet');
+sheet.addEventListener('touchstart',e=>{touchStartY=e.touches[0].clientY},{passive:true});
+sheet.addEventListener('touchend',e=>{
+  const dy=e.changedTouches[0].clientY-touchStartY;
+  if(dy>80)closeTermSheet();
+},{passive:true});
+</script>
+</body>
+</html>
